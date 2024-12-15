@@ -1,0 +1,2 @@
+
+export { ChatComp } from './Chat'

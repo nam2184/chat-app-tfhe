@@ -1,0 +1,17 @@
+/**
+looping animation
+*/
+.header {
+    animation: 0.5s ease-in-out 0s 1 header;
+    /* animation-iteration-count: infinite; */
+}
+
+@keyframes header {
+    0% {
+        transform: translateY(-100%);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
