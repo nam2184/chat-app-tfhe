@@ -11,10 +11,10 @@ interface MessageProps {
 
 const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) => {
   const [messages, setMessages] = useState<Message2[]>([]);
-  const [total, setTotal] = useState<number>();
+  const [total, setTotal] = useState<number>(0);
   const socketRef = useRef<WebSocket | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const prevChatIDRef = useRef();
+  const prevChatIDRef = useRef<number>();
 
   useEffect(() => {
     // Avoid calling fetchMessages if the chatID hasn't actually changed
