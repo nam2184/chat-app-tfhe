@@ -15,7 +15,8 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
   const socketRef = useRef<WebSocket | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const prevChatIDRef = useRef<number>();
-
+  const [socketStatus, setSocketStatus] = useState<boolean>(false); // Track WebSocket status
+  
   useEffect(() => {
     // Avoid calling fetchMessages if the chatID hasn't actually changed
     if (chatID !== prevChatIDRef.current) {
@@ -45,37 +46,51 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     };
 
   // Set up WebSocket connection
+  
+    const setupWebSocketConnection = () => {
+        const accessToken = localStorage.getItem("access_token");
+        const socket = new WebSocket(`wss://khanhmychattypi.win/api/v1/ws/${chatID}?token=${accessToken}`);
+
+        socket.onopen = () => {
+          console.log("WebSocket connected!");
+          setSocketStatus(true); // Set connection status to true
+        };
+
+        socket.onclose = () => {
+          console.log("WebSocket disconnected!");
+          setSocketStatus(false); // Set connection status to false
+          // Try reconnecting after 3 seconds
+          setTimeout(setupWebSocketConnection, 3000);
+        };
+
+        socket.onmessage = (event) => {
+          const newMessage: Message2 = JSON.parse(event.data);
+
+          // Avoid duplicate messages by checking if the new message already exists
+          setMessages((prev) => {
+            const isDuplicate = prev.some(
+              (msg) => msg.timestamp === newMessage.timestamp && msg.content === newMessage.content
+            );
+            return isDuplicate ? prev : [...prev, newMessage];
+          });
+        };
+
+        socket.onerror = (error) => {
+          console.error("WebSocket error:", error);
+        };
+
+        socketRef.current = socket;
+  };
+
   useEffect(() => {
     if (targetUser && chatID) {
-      const accessToken = localStorage.getItem("access_token");
-      const socket = new WebSocket(`wss://khanhmychattypi.win/api/v1/ws/${chatID}?token=${accessToken}`);
-
-      socket.onopen = () => {
-        console.log("WebSocket connected!");
-      };
-
-      socket.onmessage = (event) => {
-        const newMessage: Message2 = JSON.parse(event.data);
-
-        // Avoid duplicate messages by checking if the new message already exists
-        setMessages((prev) => {
-          const isDuplicate = prev.some(
-            (msg) => msg.timestamp === newMessage.timestamp && msg.content === newMessage.content
-          );
-          return isDuplicate ? prev : [...prev, newMessage];
-        });
-      };
-
-      socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-      };
-
-      socketRef.current = socket;
-
-      return () => {
-        socket.close();
-      };
+      setupWebSocketConnection();
     }
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+    };
   }, [targetUser, chatID]);
 
   // Send a message through WebSocket and handle optimistic UI update
