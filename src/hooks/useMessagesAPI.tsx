@@ -48,7 +48,7 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
   useEffect(() => {
     if (targetUser && chatID) {
       const accessToken = localStorage.getItem("access_token");
-      const socket = new WebSocket(`ws://localhost:8000/api/v1/ws/${chatID}?token=${accessToken}`);
+      const socket = new WebSocket(`wss://khanhmychattypi.win/api/v1/ws/${chatID}?token=${accessToken}`);
 
       socket.onopen = () => {
         console.log("WebSocket connected!");

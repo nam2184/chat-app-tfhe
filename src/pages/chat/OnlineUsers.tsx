@@ -32,7 +32,7 @@ const OnlineUsers: React.FC<UsersProp> = (props) => {
                                 onClick2(user, chatID); 
                             }
                         }}
-                        className={'flex flex-row gap-2 items-center py-2 rounded-md hover:bg-gray-200 cursor-pointer'}
+                        className={'flex flex-row gap-2 items-center py-2 rounded-md hover:bg-gray-200 cursor-pointer text-white '}
                         key={index}>
                         <div
                             className={'w-10 h-10 rounded-full bg-gray-300'}>
