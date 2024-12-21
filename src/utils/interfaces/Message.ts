@@ -12,10 +12,12 @@ export interface Message {
 
 export interface Message2 {
     id?: number,
+    type: string,
     timestamp: string,
     sender_name?: string,
     sender_id?: number,
     receiver_id: number,
     content?: string
     chat_id: number
+    is_typing: boolean
 }

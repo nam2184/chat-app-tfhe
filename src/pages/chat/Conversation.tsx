@@ -16,7 +16,7 @@ const Conversation: React.FC<ConversationProps> = (props) => {
   const { user, sender, chatID } = props;
   const [text, setText] = useState<string>('');
   const [offset, setOffset] = useState<number>(0); // Track the offset
-  const { sendMessage, messages, total, loading, fetchMessages } = useMessagesAPI({
+  const { sendMessage, sendTypingEvent, messages, total, loading, fetchMessages, socketStatus, isTypingMessage } = useMessagesAPI({
     sender: sender,
     targetUser: user,
     chatID: chatID,
@@ -25,13 +25,28 @@ const Conversation: React.FC<ConversationProps> = (props) => {
 
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const messageContainerRef = useRef<HTMLDivElement | null>(null);
-
+  let typingTimeout: NodeJS.Timeout | null = null;
+  
   // Handle submit message
   const handleSubmitMessage = (message: Message) => {
     if (user) {
       sendMessage(text);
       setText('');
     }
+  };
+
+  const isTyping = (
+    ) => {
+      // Clear the timeout if it exists to reset the debounce
+      if (typingTimeout) return;
+      
+      // Notify that the user is typing
+      sendTypingEvent(true);
+
+      // Set a new timeout to indicate "stopped typing" after 2 seconds of no input
+      typingTimeout = setTimeout(() => {
+        sendTypingEvent(false);
+      }, 2000); // Adjust debounce delay as needed
   };
 
   // Handle scroll event to load older messages when reaching the top
@@ -71,6 +86,13 @@ const Conversation: React.FC<ConversationProps> = (props) => {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]); // Trigger scroll to the bottom when messages change
+
+  useEffect(() => {
+    if (!socketStatus) {
+      setOffset(0)
+    }
+  }, [socketStatus]); // Trigger scroll to the bottom when messages change
+
 
   // Scroll to the bottom when messages load
   useEffect(() => {
@@ -125,7 +147,14 @@ const Conversation: React.FC<ConversationProps> = (props) => {
           const username = msg.sender_name;
           return <MessageBox key={index} message={msg} username={username} />;
         })}
-        
+        {/* Typing Indicator */}
+        {isTypingMessage && (
+          <div className="flex items-center gap-1 px-4 h-6">
+            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
+            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-[200ms]"></span>
+            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-[400ms]"></span>
+          </div>
+        )}
         {/* Scroll to the bottom of the messages */}
         <div ref={messageEndRef} />
       </div>
@@ -135,7 +164,8 @@ const Conversation: React.FC<ConversationProps> = (props) => {
         <UserInput
           value={text}
           onChange={(value) => {
-            setText(value);
+            setText(value)
+            isTyping()
           }}
           onSubmit={handleSubmitMessage}
           key={user?.id}
