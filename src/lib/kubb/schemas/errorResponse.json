@@ -1,0 +1,17 @@
+{
+  "properties": {
+    "code": { "type": "integer" },
+    "error": {
+      "properties": {
+        "message": { "type": "string" },
+        "section": { "type": "string" }
+      },
+      "type": "object"
+    },
+    "message": { "type": "string" },
+    "status": { "type": "string" },
+    "type": { "type": "integer" }
+  },
+  "type": "object",
+  "x-readme-ref-name": "ErrorResponse"
+}

@@ -1,16 +1,72 @@
-import { Collapse, Skeleton } from "components";
-import { User, Chat, useAuth, useUsersAPI, useUserAPI } from "hooks";
+import { Collapse, Skeleton } from "@/components";
 import React, { useContext } from "react";
+import {  User } from "@/utils/interfaces"
 import { OnlineUsers } from "./OnlineUsers";
 import { Conversation } from "./Conversation";
+import { useGetUserSuspense,useGetChatsSuspense, useGetUsersSuspense, usePostChats } from "@/lib/kubb";
+import { GetUserResponse } from "node_modules/@aws-amplify/auth/dist/esm/foundation/factories/serviceClients/cognitoIdentityProvider/types";
+import z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AddUsers } from "./AddUsers";
+import { useQueryClient } from "@tanstack/react-query";
+
+const postChatSchema = z.object({
+  user1_id: z.number(),
+  user2_id: z.number(),
+});
+
 
 const ChatComp: React.FC = () => {
-    const { userInfo } = useUserAPI();
-    const { users, chats, loading: loadingUser } = useUsersAPI();
+    
+    const queryClient = useQueryClient();
+    const userGet = useGetUserSuspense()
+    const usersGet = useGetUsersSuspense()
+    const chatGet = useGetChatsSuspense()
 
+    const sender = userGet.data
+    
+    const form = useForm<z.infer<typeof postChatSchema>>({
+      resolver: zodResolver(postChatSchema),
+      defaultValues: {
+      },
+    });
+    
+    const postChatsMutation = usePostChats({
+      mutation: {
+        onSettled: () => {
+          queryClient.invalidateQueries({
+            queryKey: usersGet.queryKey,
+            refetchType: "all",
+          });
+          queryClient.invalidateQueries({
+            queryKey: chatGet.queryKey,
+            refetchType: "all",
+          });
+        },
+      },
+    });
+
+    const handlePostChats = async (user1_id : number, user2_id : number) => {
+        try {
+          await postChatsMutation.mutateAsync({ 
+            data : {
+              user1_id: user1_id, 
+              user2_id: user2_id,
+            }
+          });
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+              form.setError("root", {
+                message: e.message,
+              });
+         }
+        }
+      };
+ 
     const targetScroll = React.useRef<HTMLDivElement>(null);
     const [isBottom, setIsBottom] = React.useState<boolean>(false);
-    const [user, setUserAPI] = React.useState<User | null>(null);
+    const [reciever, setReciever] = React.useState<User | null>(null);
     const [chatID, setChatID] = React.useState<number | null>(null);
 
     React.useEffect(() => {
@@ -25,10 +81,11 @@ const ChatComp: React.FC = () => {
         }
     }, []);
 
-    const handleOnOnlineUserClick = (user: User, chatID: number) => {
-        setUserAPI(user);
+    const handleOnOnlineUserClick = (reciever: User, chatID: number) => {
+        setReciever(reciever);
         setChatID(chatID);
     };
+
 
     return (
         <main className="w-full 2xl:w-9/12 2xl:mx-auto">
@@ -66,13 +123,25 @@ const ChatComp: React.FC = () => {
                         <div className="flex-1 flex flex-col gap-2 overflow-y-auto p-2">
                             <Collapse label="Online Now">
                                 <div className="flex flex-col gap-2 overflow-auto" id="online">
-                                    {loadingUser ? (
+                                    {usersGet.isPending ? (
                                         <Skeleton />
                                     ) : (
                                         <OnlineUsers
-                                            onClick2={handleOnOnlineUserClick}
-                                            users={users}
-                                            chats={chats}
+                                            onClick={handleOnOnlineUserClick}
+                                            response={chatGet.data}
+                                        />
+                                    )}
+                                </div>
+                            </Collapse>
+                            <Collapse label="Add these users">
+                                <div className="flex flex-col gap-2 overflow-auto" id="online">
+                                    {chatGet.isPending ? (
+                                        <Skeleton />
+                                    ) : (
+                                        <AddUsers
+                                            onClick={handlePostChats}
+                                            sender={userGet.data}
+                                            response={usersGet.data}
                                         />
                                     )}
                                 </div>
@@ -85,10 +154,10 @@ const ChatComp: React.FC = () => {
 
                 {/* Chat Section */}
                 <section className="col-span-2 h-full">
-                    {user ? (
+                    {reciever? (
                         <Conversation
-                            sender={userInfo}
-                            user={user}
+                            sender={sender}
+                            reciever={reciever}
                             chatID={chatID!!}
                         />
                     ) : (

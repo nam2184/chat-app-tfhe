@@ -1,21 +1,20 @@
-import { Chat, IUser, User } from "hooks"
+import { GetChatsQueryResponse } from "@/lib/kubb";
+import { User } from "@/utils/interfaces";
 import React from "react"
 
-
 interface UsersProp {
-    users?: User[]
-    chats?: Chat[]
-    onClick?: (user: IUser) => void
-    onClick2?: (user: User, chatID: number) => void
+  response: GetChatsQueryResponse  
+  onClick?: (user : User, chatID: number) => void
 }
 
 const OnlineUsers: React.FC<UsersProp> = (props) => {
     const {
-        users,
-        chats,
-        onClick2
+        response,
+        onClick
     } = props;
-
+    const users = response.users
+    const chats = response.chats
+    
     return (
         <>
             {users && users.map((user, index) => {
@@ -28,8 +27,8 @@ const OnlineUsers: React.FC<UsersProp> = (props) => {
                 return (
                     <div
                         onClick={() => { 
-                            if (onClick2 && chatID !== null) {
-                                onClick2(user, chatID); 
+                            if (onClick && chatID !== null) {
+                                onClick(user, chatID!); 
                             }
                         }}
                         className={'flex flex-row gap-2 items-center py-2 rounded-md hover:bg-gray-200 cursor-pointer text-white '}

@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "total": { "type": "integer" },
+    "total_pages": { "type": "integer" },
+    "first_page": { "type": "integer" },
+    "last_page": { "type": "integer" },
+    "page": { "type": "integer" },
+    "previous_page": { "type": "integer" },
+    "next_page": { "type": "integer" }
+  },
+  "x-readme-ref-name": "PaginationMetadata"
+}

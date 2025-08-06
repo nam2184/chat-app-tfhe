@@ -1,0 +1,20 @@
+{
+  "properties": {
+    "access_token": { "type": "string" },
+    "exp": { "format": "date-time", "type": "string" },
+    "refresh_token": { "type": "string" },
+    "user": {
+      "properties": {
+        "created_at": { "format": "date-time", "type": "string" },
+        "email": { "type": "string" },
+        "first_name": { "type": "string" },
+        "id": { "format": "int64", "type": "integer" },
+        "surname": { "type": "string" },
+        "username": { "type": "string" }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-readme-ref-name": "GetRefreshAuthResponse"
+}

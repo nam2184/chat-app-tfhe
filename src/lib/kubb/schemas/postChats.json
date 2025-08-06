@@ -1,0 +1,8 @@
+{
+  "properties": {
+    "user1_id": { "minimum": 0, "type": "integer" },
+    "user2_id": { "minimum": 0, "type": "integer" }
+  },
+  "type": "object",
+  "x-readme-ref-name": "PostChats"
+}

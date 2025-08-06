@@ -1,54 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Message2, api } from "utils";
-import { User } from "./useAuth";
+import {Message, User, api } from "@/utils";
+import { usePostEncrypt } from "@/lib/kubb-he";
+import z from "zod";
 
 interface MessageProps {
-  sender?: User | null;
-  targetUser: User;
+  sender?: User| undefined;
+  targetUser: number;
   chatID: number;
   offset: number;
 }
 
 const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) => {
-  const [messages, setMessages] = useState<Message2[]>([]);
-  const [total, setTotal] = useState<number>(0);
+  const [messages, setMessages] = useState<Message[]>([]);
   const socketRef = useRef<WebSocket | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const prevChatIDRef = useRef<number>();
   const [socketStatus, setSocketStatus] = useState<boolean>(false); // Track WebSocket status
-  const [isTypingMessage, setIsTyping] = useState<boolean>(false);
+  const [isTypingMessage, setIsTyping] = useState<boolean | undefined>(false);
   
-  useEffect(() => {
-    // Avoid calling fetchMessages if the chatID hasn't actually changed
-    if (chatID !== prevChatIDRef.current) {
-      fetchMessages(offset);
-      prevChatIDRef.current = chatID;
-    }
-  }, [chatID, offset]);  // Re-run if either chatID or offset changes  
-
-  const fetchMessages = async (offset : number) => {
-      try {
-        setLoading(true);
-        const response = await api.get(`/messages/${chatID}?sort_by=timestamp&order=DESC&skip=${offset}`);
-        
-        // Append new messages at the top of the list, while maintaining existing ones
-        setMessages([
-          ...response.data.array[0].reverse(),
-          ...messages,
-        ]);
-        setTotal(response.data.meta.total);
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  // Set up WebSocket connection
+  const postEncryptMutation  = usePostEncrypt();
   
   const setupWebSocketConnection = () => {
     const accessToken = localStorage.getItem("access_token");
-    const socket = new WebSocket(`wss://khanhmychattypi.win/api/v1/ws/${chatID}?token=${accessToken}`);
+    const socket = new WebSocket(`wss://khanhmychattypi.win/api/v1/ws/${chatID}?access_token=${accessToken}`);
 
     socket.onopen = () => {
       console.log("WebSocket connected!");
@@ -58,15 +30,11 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     socket.onclose = () => {
       console.log("WebSocket disconnected!");
       setSocketStatus(false); // Set connection status to false
-      // Clear messages and fetch again on WebSocket disconnect
-      setMessages([]); // Clear the messages state
-      fetchMessages(offset); // Re-fetch messages from the server
-      // Try reconnecting after 3 seconds
       setTimeout(setupWebSocketConnection, 3000);
     };
 
     socket.onmessage = (event) => {
-      const newMessage: Message2 = JSON.parse(event.data);
+      const newMessage: Message = JSON.parse(event.data);
       if (newMessage.type === "typing") {
         // Update typing status based on incoming event
         setIsTyping(newMessage.is_typing);
@@ -99,25 +67,26 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     };
   }, [targetUser, chatID]);
 
-  // Send a message through WebSocket and handle optimistic UI update
-  const sendMessage = (content: string) => {
-    if (!content.trim() || !socketRef.current) return;
-
-    const message: Message2 = {
+  const sendMessage = async (content: string, image: string) => {
+    if ((!content.trim() && image == "") || !socketRef.current) return;
+    
+    if (image == "") {
+      image = " "
+    } 
+    const message: Message = {
       chat_id: chatID,
       type: "message",
       sender_name: sender?.username,
-      receiver_id: targetUser.id,
+      receiver_id: targetUser,
       content,
+      image,
       timestamp: new Date().toISOString(),
       is_typing: false,
     };
-
     try {
       socketRef.current.send(JSON.stringify(message));
       console.log("Sending message:", JSON.stringify(message));
 
-      // Optimistic update: Avoid adding a duplicate message in case WebSocket echoes it back
       setMessages((prev) => {
         const isDuplicate = prev.some(
           (msg) => msg.timestamp === message.timestamp && msg.content === message.content
@@ -132,11 +101,11 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
   const sendTypingEvent = (is : boolean) => {
     if (!socketRef.current) return;
 
-    const typingEvent: Message2 = {
+    const typingEvent: Message = {
       chat_id: chatID,
       type: "typing",
       sender_name: sender?.username, 
-      receiver_id: targetUser.id,
+      receiver_id: targetUser,
       timestamp: new Date().toISOString(),
       is_typing: is,
     };
@@ -148,15 +117,42 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
       console.error("Error sending typing event:", error);
     }
   };
+  
+  const encryptData = async (data : Message) => {
+        try {
+          await postEncryptMutation.mutateAsync({ 
+            data : {
+              user1_id: user1_id, 
+              user2_id: user2_id,
+            }
+          });
+
+            console.log(response);
+            return response.data;
+        } catch (error) {
+            console.error('Error encrypting data:', error);
+            return null;
+        }
+    };
+
+    const decryptData = async (encryptedData : Message) => {
+        try {
+            const response = await heApi.post("/decrypt", { encryptedData });
+            setDecrypted(true);
+            console.log(response);
+            return response;
+        } catch (error) {
+            console.error('Error decrypting data:', error);
+            return null;
+        }
+    };
 
   return {
     messages,
     sendMessage,
     sendTypingEvent,
-    total,
-    loading,
-    fetchMessages,
     socketStatus,
+    setupWebSocketConnection,
     isTypingMessage
   };
 };

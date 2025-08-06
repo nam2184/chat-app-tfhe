@@ -1,0 +1,11 @@
+{
+  "properties": {
+    "email": { "type": "string" },
+    "first_name": { "type": "string" },
+    "id": { "format": "int64", "type": "integer" },
+    "surname": { "type": "string" },
+    "username": { "type": "string" }
+  },
+  "type": "object",
+  "x-readme-ref-name": "PostSignUpResponse"
+}

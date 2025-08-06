@@ -1,39 +1,76 @@
-import { User } from "hooks";
+import { User } from "@/utils/interfaces";
 import React, { useState, useEffect, useRef } from "react";
 import { UserInput } from "./UserInput";
 import styles from './styles/chat.module.css';
-import { Message2, Message } from "utils";
-import { useMessagesAPI } from "hooks";
+import { Message } from "@/utils";
+import { useMessagesAPI } from "@/hooks";
 import { MessageBox } from "./MessageBox";
+import { useGetEncryptedMessagesSuspense, useGetMessagesSuspense } from "@/lib/kubb";
 
 interface ConversationProps {
-  sender?: User | null;
-  user: User;
+  sender?: User;
+  reciever: User;
   chatID: number;
 }
 
 const Conversation: React.FC<ConversationProps> = (props) => {
-  const { user, sender, chatID } = props;
+  const { reciever, sender, chatID } = props;
   const [text, setText] = useState<string>('');
-  const [offset, setOffset] = useState<number>(0); // Track the offset
-  const { sendMessage, sendTypingEvent, messages, total, loading, fetchMessages, socketStatus, isTypingMessage } = useMessagesAPI({
-    sender: sender,
-    targetUser: user,
+  const [offset, setOffset] = useState<number>(0); 
+  const [encrypted, setEncrypted] = useState(false);
+  const [image, setImage] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [total, setTotal] = useState<number | null | undefined>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const prevChatIDRef = useRef<number>();
+  
+  const { sendMessage, sendEncryptedMessage, sendTypingEvent, socketStatus, isTypingMessage } = useMessagesAPI({
+    sender: sender!,
+    targetUser: reciever.id!,
     chatID: chatID,
     offset: offset,
   });
 
+
+  useEffect(() => {
+    // Avoid calling fetchMessages if the chatID hasn't actually changed
+    if (chatID !== prevChatIDRef.current) {
+      fetchMessages(offset);
+      prevChatIDRef.current = chatID;
+    }
+  }, [chatID, offset]);  
+  
+  useEffect(() => {
+    if (!socketStatus) {
+      console.log('Handling WebSocket disconnect state...');
+      fetchMessages(offset); // Refetch messages
+    }
+  }, [socketStatus]);
+
+  
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const messageContainerRef = useRef<HTMLDivElement | null>(null);
   let typingTimeout: NodeJS.Timeout | null = null;
   
   // Handle submit message
-  const handleSubmitMessage = (message: Message) => {
-    if (user) {
-      sendMessage(text);
-      setText('');
+  const handleSubmitMessage = async (message: Message) => {
+    if (reciever && (text.trim() || image)) {
+      try {
+        if (!encrypted) {
+          console.log("Sending non encrypted message")
+          await sendMessage(text.trim(), image);
+        } else {
+          console.log("Sending encrypted message")
+          await sendEncryptedMessage(text.trim(), image);
+        }
+        setText('');
+        setImage('');
+      } catch (err) {
+        console.error('Failed to send message:', err);
+      }
     }
   };
+
 
   const isTyping = (
     ) => {
@@ -48,16 +85,56 @@ const Conversation: React.FC<ConversationProps> = (props) => {
         sendTypingEvent(false);
       }, 2000); // Adjust debounce delay as needed
   };
+  
+  const fetchMessages =  (offset : number) => {
+      try {
+        setLoading(true);
+        const getMessages = useGetMessagesSuspense(chatID, {
+          skip : offset,
+          sort_by : "id",
+          order_by: "DESC"
+        });
+        // Append new messages at the top of the list, while maintaining existing ones
+        setMessages([
+          ...getMessages.data?.array!.reverse(),
+          ...messages,
+        ]);
+        setTotal(getMessages.data?.meta!.total);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Handle scroll event to load older messages when reaching the top
+  const fetchMessagesEncrypted = (offset : number) => {
+      try {
+        setLoading(true);
+        const getEncryptedMessages = useGetEncryptedMessagesSuspense(chatID, {
+          skip : offset,
+          sort_by : "id",
+          order_by: "DESC"
+        }); 
+        // Append new messages at the top of the list, while maintaining existing ones
+        setMessages([
+          ...getEncryptedMessages.data?.array!.reverse(),
+          ...messages,
+        ]);
+        setTotal(getEncryptedMessages.data?.meta!.total);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const container = event.currentTarget;
-    const top = container.scrollTop === 0; // Check if we're at the top of the container
-    const messagesPerRequest = 10; // Number of messages loaded per request
+    const top = container.scrollTop === 0; 
+    const messagesPerRequest = 10; 
     const isNotLoading = !loading;
 
-    // Calculate remaining messages that can be loaded
-    const remainingMessages = Math.max(0, total - offset); // Prevent negative remaining messages
+    const remainingMessages = Math.max(0, total! - offset); // Prevent negative remaining messages
 
     console.log('Remaining Messages:', remainingMessages);
     console.log('Is Not Loading:', isNotLoading);
@@ -67,12 +144,10 @@ const Conversation: React.FC<ConversationProps> = (props) => {
       const nextOffset = offset + messagesPerRequest;
 
       console.log('At the offset:', offset);
-      // Fetch only remaining messages if they are less than the `messagesPerRequest`
       const fetchMessagesAPI = () => {
-        const newOffset = nextOffset <= total ? nextOffset : offset + remainingMessages;
+        const newOffset = nextOffset <= total! ? nextOffset : offset + remainingMessages;
         setOffset(newOffset); // Update the offset
 
-        // Call the function to load more messages, this can be a function like `fetchMessages` that gets the new batch of messages
         fetchMessages(newOffset);
       };
 
@@ -109,16 +184,16 @@ const Conversation: React.FC<ConversationProps> = (props) => {
           <div className={'flex gap-2'}>
             {/* Avatar */}
             <div className={'w-10 h-10 rounded-full bg-gray-300'}>
-              {user?.username ? (
+              {reciever?.username ? (
                 <img
                   referrerPolicy={'no-referrer'}
-                  alt={user?.username}
+                  alt={reciever?.username}
                   className={'w-full h-full rounded-full'}
                 />
               ) : (
                 <div className={'w-full h-full rounded-full flex justify-center items-center'}>
                   <span className={'text-2xl font-bold text-black'}>
-                    {user?.username?.charAt(0)}
+                    {reciever?.username?.charAt(0)}
                   </span>
                 </div>
               )}
@@ -126,12 +201,19 @@ const Conversation: React.FC<ConversationProps> = (props) => {
             <div className={'flex flex-col justify-between'}>
               {/* Name */}
               <h4 className={'text-base font-semibold text-ellipsis line-clamp-1'}>
-                {user?.username}
+                {reciever?.username}
               </h4>
               {/* Status */}
-              <span className={'text-xs text-gray-500'}>{user?.created_at}</span>
+              <span className={'text-xs text-gray-500'}>{reciever?.created_at}</span>
             </div>
           </div>
+          {/* Toggle Encryption */}
+          <button
+            className="px-4 py-1 text-sm bg-gray-300 hover:bg-gray-400 rounded transition"
+            onClick={() => setEncrypted(prev => !prev)}
+          >
+            {encrypted ? 'Disable Encryption' : 'Enable Encryption'}
+          </button>
         </div>
       </header>
 
@@ -143,7 +225,7 @@ const Conversation: React.FC<ConversationProps> = (props) => {
         onScroll={handleScroll}
       >
         {/* Render messages from most recent to oldest */}
-        {messages.map((msg: Message2, index: number) => {
+        {messages.map((msg: Message, index: number) => {
           const username = msg.sender_name;
           return <MessageBox key={index} message={msg} username={username} />;
         })}
@@ -164,12 +246,21 @@ const Conversation: React.FC<ConversationProps> = (props) => {
         <UserInput
           value={text}
           onChange={(value) => {
-            setText(value)
-            isTyping()
+            setText(value);
+            isTyping();
           }}
+          onImageChange={(file) => {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setImage(reader.result as string);
+              isTyping();
+            };
+            reader.readAsDataURL(file);
+        }}
           onSubmit={handleSubmitMessage}
-          key={user?.id}
-        />
+          key={reciever?.id}
+      />
       </div>
     </div>
   );

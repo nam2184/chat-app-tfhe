@@ -1,0 +1,11 @@
+{
+  "properties": {
+    "email": { "type": "string" },
+    "first_name": { "type": "string" },
+    "password": { "type": "string" },
+    "surname": { "type": "string" },
+    "username": { "type": "string" }
+  },
+  "type": "object",
+  "x-readme-ref-name": "PostAuthSignUp"
+}

@@ -1,0 +1,13 @@
+{
+  "properties": {
+    "created_at": { "format": "date-time", "type": "string" },
+    "id": { "minimum": 0, "type": "integer" },
+    "last_message_time": { "format": "date-time", "type": "string" },
+    "seen": { "type": "boolean" },
+    "updated_at": { "format": "date-time", "type": "string" },
+    "user1_id": { "minimum": 0, "type": "integer" },
+    "user2_id": { "minimum": 0, "type": "integer" }
+  },
+  "type": "object",
+  "x-readme-ref-name": "PostChatsResponse"
+}

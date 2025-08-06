@@ -1,0 +1,28 @@
+{
+  "properties": {
+    "array": {
+      "items": {
+        "properties": {
+          "chat_id": { "minimum": 0, "type": "integer" },
+          "content": { "type": "string" },
+          "id": { "minimum": 0, "type": "integer" },
+          "image": { "type": "string" },
+          "is_typing": { "type": "boolean" },
+          "receiver_id": { "minimum": 0, "type": "integer" },
+          "sender_id": { "minimum": 0, "type": "integer" },
+          "sender_name": { "type": "string" },
+          "timestamp": { "format": "date-time", "type": "string" },
+          "type": { "type": "string" }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "meta": {
+      "properties": { "total": { "nullable": true, "type": "integer" } },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-readme-ref-name": "GetEncryptedMessages"
+}

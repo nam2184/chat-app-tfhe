@@ -1,12 +1,9 @@
 import { useContext, useEffect, useState } from "react"
-import { User, useAuth } from "./useAuth"
-import { collection, onSnapshot, query, where } from "firebase/firestore"
-import { db, api } from "utils"
-import { AuthContext } from "contexts"
+import { api } from "@/utils"
 
 interface ChatInfo {
-  chats: Chat[];
-  users: User[];
+  chats: any[];
+  users: any[];
 }
 
 interface Meta {
@@ -29,10 +26,9 @@ interface Chat {
 }
 
 const useUsersAPI = () => {
-    const [users, setUsers] = useState<User[]>([])
-    const [chats, setChats] = useState<Chat[]>([])
+    const [users, setUsers] = useState<any[]>([])
+    const [chats, setChats] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    //const {userInfoAPI} = useContext(AuthContext)
   
     useEffect(() => {
             setLoading(true)

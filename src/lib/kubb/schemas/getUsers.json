@@ -1,0 +1,23 @@
+{
+  "properties": {
+    "array": {
+      "items": {
+        "properties": {
+          "email": { "type": "string" },
+          "first_name": { "type": "string" },
+          "id": { "format": "int64", "type": "integer" },
+          "surname": { "type": "string" },
+          "username": { "type": "string" }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "meta": {
+      "properties": { "total": { "nullable": true, "type": "integer" } },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-readme-ref-name": "GetUsers"
+}

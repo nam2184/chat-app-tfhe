@@ -1,16 +1,14 @@
-import { User } from "hooks"
 import React from "react"
-import { Message2 } from "utils"
+import { Message } from "@/utils"
 import dayjs from 'dayjs';
 
 interface MessageProp {
-    message: Message2
+    message: Message
     username?: string
 }
 
 const MessageBox: React.FC<MessageProp> = (props) => {
     const { message, username } = props;
-
     return (
         <div className="flex flex-col bg-gray-100 p-3 rounded-lg shadow-md">
             {/* Message Header */}

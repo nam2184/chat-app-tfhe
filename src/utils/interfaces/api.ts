@@ -1,14 +1,22 @@
+import axios, {
+    AxiosInstance,
+    AxiosRequestConfig,
+    AxiosResponse,
+    InternalAxiosRequestConfig,
+    AxiosError
+} from 'axios';
 
-import axios from 'axios';
+// Constants for token keys
+const ACCESS_TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 
-// Assuming your types for ErrorResponse and ErrorType are as follows
-interface ErrorType {
+export interface ErrorType {
     section: string;
     message: string;
     err?: Error;
 }
 
-interface ErrorResponse {
+export interface ErrorResponse {
     status: string;
     type: number;
     message: string;
@@ -16,8 +24,12 @@ interface ErrorResponse {
     error: ErrorType;
 }
 
-// Create the Axios instance
-const api = axios.create({
+export interface RefreshTokenResponse {
+    access_token: string;
+    refresh_token: string;
+}
+
+const api: AxiosInstance = axios.create({
     baseURL: 'https://khanhmychattypi.win/api/v1',
     timeout: 10000,
     headers: {
@@ -25,67 +37,68 @@ const api = axios.create({
     },
 });
 
-// Request interceptor to add Authorization token
 api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('access_token');
+    (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
+        const token = localStorage.getItem(ACCESS_TOKEN_KEY);
         if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error: AxiosError): Promise<AxiosError> => Promise.reject(error)
 );
 
-// Response interceptor for handling token expiration and refresh
+const refreshAccessToken = async (): Promise<RefreshTokenResponse | null> => {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+    if (!refreshToken) return null;
+
+    try {
+        const response = await axios.post<RefreshTokenResponse>('/refresh', {
+            refresh_token: refreshToken,
+        });
+
+        const { access_token, refresh_token } = response.data;
+        localStorage.setItem(ACCESS_TOKEN_KEY, access_token);
+        localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
+        return { access_token, refresh_token };
+    } catch (error) {
+        console.error('Token refresh failed:', error);
+        return null;
+    }
+};
+
 api.interceptors.response.use(
-    (response) => response, // Pass through the response if it's successful
-    async (error) => {
-        const originalRequest = error.config; // Get the original request that failed
+    (response: AxiosResponse): AxiosResponse => response,
 
-        // If the error is from the server and it's an authorization error (401)
-        if (error.response && error.response.status === 401) {
-            const errorResponse: ErrorResponse = error.response.data;
+    async (error: AxiosError): Promise<unknown> => {
+        const originalRequest = error.config;
 
-            // If the error message indicates the token is expired
-            if (errorResponse.message.includes('token expired')) {
-                try {
-                    const refreshToken = localStorage.getItem('refresh_token');
-                    if (refreshToken) {
-                        const refreshResponse = await axios.post('/refresh', {
-                            refresh_token: refreshToken,
-                        });
+        const responseData = error.response?.data as Partial<ErrorResponse>;
 
-                        const { access_token, refresh_token } = refreshResponse.data;
-                        localStorage.setItem('access_token', access_token);
-                        localStorage.setItem('refresh_token', refresh_token);
+        const isUnauthorized = error.response?.status === 401;
+        const isTokenExpired = responseData?.message?.includes('token expired');
 
-                        originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
-                        return axios(originalRequest); // Retry the original request
-                    }
-                } catch (refreshError) {
-                    console.error('Error refreshing token', refreshError);
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
+        if (isUnauthorized && isTokenExpired && originalRequest) {
+            const tokens = await refreshAccessToken();
 
-                    window.location.href = '/'; // Redirect to the sign-in page
-
-                    console.error("Failed to refresh the token, redirecting to sign-in.");
-                    return Promise.reject(refreshError);
-                }
-            } else {
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                window.location.href = '/'; 
-
-                return Promise.reject(error);
-
+            if (tokens && originalRequest.headers) {
+                originalRequest.headers['Authorization'] = `Bearer ${tokens.access_token}`;
+                return api(originalRequest); // Retry original request
             }
+
+            // Redirect if refresh fails
+            localStorage.removeItem(ACCESS_TOKEN_KEY);
+            localStorage.removeItem(REFRESH_TOKEN_KEY);
+            window.location.href = '/';
+            return Promise.reject(new Error('Session expired. Redirecting.'));
         }
 
-        // If it's not a 401 or doesn't relate to token expiration, just reject the error
+        if (isUnauthorized) {
+            localStorage.removeItem(ACCESS_TOKEN_KEY);
+            localStorage.removeItem(REFRESH_TOKEN_KEY);
+            window.location.href = '/';
+        }
+
         return Promise.reject(error);
     }
 );
