@@ -19,6 +19,7 @@ interface UserInputProps {
     onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
     onImageChange?: (file: File) => void;
     value?: string;
+    image?: string;
     placeholder?: string;
     extras?: React.ReactNode;
     children?: never[];
@@ -46,10 +47,9 @@ const UserInput: React.FC<UserInputProps> = (props) => {
     };
 
     const handleSubmit = () => {
-        const trimmed = props.value?.trim();
-        if (!trimmed) return;
         props.onSubmit?.({
           content: props.value || '',
+          image: props.image || '',
         });
     };
 
@@ -59,23 +59,6 @@ const UserInput: React.FC<UserInputProps> = (props) => {
             handleSubmit();
         }
         props.onKeyDown?.(event);
-    };
-
-    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => setImagePreview(reader.result as string);
-            reader.readAsDataURL(file);
-          
-            if (props.onSubmit) {
-                props.onSubmit({
-                    content: '',
-                    type: UserInputType.IMAGE
-                });
-            }
-            setType(UserInputType.TEXT);
-        }
     };
 
     return (

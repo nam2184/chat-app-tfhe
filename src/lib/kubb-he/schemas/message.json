@@ -7,7 +7,7 @@
     "sender_name": { "type": "string" },
     "receiver_id": { "type": "integer" },
     "content": { "type": "string" },
-    "image": {},
+    "image": { "type": "string" },
     "type": { "type": "string" },
     "is_typing": { "type": "boolean" },
     "timestamp": { "type": "string", "format": "date-time" }

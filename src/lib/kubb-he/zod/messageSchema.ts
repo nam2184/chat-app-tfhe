@@ -12,7 +12,7 @@ export const messageSchema = z.object({
   sender_name: z.string(),
   receiver_id: z.number().int(),
   content: z.string(),
-  image: z.any().optional(),
+  image: z.string().optional(),
   type: z.string(),
   is_typing: z.boolean().optional(),
   timestamp: z.string().datetime(),

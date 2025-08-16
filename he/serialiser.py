@@ -5,6 +5,7 @@ import os
 headers = {
     'Content-Type': 'application/json; charset=utf-8'
 }
+
 LOCAL_SERVER_ENDPOINT = "http://127.0.0.1:5000"
 REMOTE_SERVER_ENDPOINT = "https://hekms.win"
 

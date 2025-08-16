@@ -82,6 +82,7 @@ const ChatComp: React.FC = () => {
     }, []);
 
     const handleOnOnlineUserClick = (reciever: User, chatID: number) => {
+        console.log("Change chat ID to ", chatID)
         setReciever(reciever);
         setChatID(chatID);
     };

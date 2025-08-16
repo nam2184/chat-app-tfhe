@@ -6,6 +6,7 @@
 import type { Error } from "./Error";
 import type { ErrorType } from "./ErrorType";
 import type { Message } from "./Message";
+import type { MessageBody } from "./MessageBody";
 
 /**
  * @description OK
@@ -27,7 +28,7 @@ export type PostEncrypt422 = Error;
  */
 export type PostEncryptError = Error;
 
-export type PostEncryptMutationRequest = Message;
+export type PostEncryptMutationRequest = MessageBody;
 
 export type PostEncryptMutationResponse = PostEncrypt200;
 

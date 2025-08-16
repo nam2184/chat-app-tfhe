@@ -3,6 +3,7 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "main": "main.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -10,7 +11,12 @@
     "generate": "kubb generate",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "pretty": "prettier .",
-    "postgenerate": "prettier ./src/lib/kubb/ ./src/lib/kubb-he ./schema.json ./he-schema.json --write"
+    "postgenerate": "prettier ./src/lib/kubb/ ./src/lib/kubb-he ./schema.json ./he-schema.json --write",
+    "start": "concurrently \"npm run dev:electron\" \"npm run dev:react\"",
+    "dev:electron": "cross-env NODE_ENV=development electron .",
+    "dev:react": "vite",
+    "build:desktop": "tsc -b && vite build && electron-builder",
+    "dev:python": "python3 he/client.py"
   },
   "dependencies": {
     "@aws-amplify/auth": "^6.6.0",
@@ -41,9 +47,11 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "concurrently": "^9.2.0",
+    "cross-env": "^10.0.0",
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",
-    "electron": "^37.2.4",
+    "electron": "^37.2.6",
     "emoji-picker-react": "^4.13.2",
     "i": "^0.3.7",
     "i18n-iso-countries": "^7.13.0",

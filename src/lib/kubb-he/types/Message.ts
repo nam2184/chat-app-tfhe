@@ -28,7 +28,10 @@ export type Message = {
    * @type string
    */
   content: string;
-  image?: any;
+  /**
+   * @type string | undefined
+   */
+  image?: string;
   /**
    * @type string
    */

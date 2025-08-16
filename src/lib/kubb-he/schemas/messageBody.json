@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "properties": {
+    "chat_id": { "type": "integer" },
+    "sender_id": { "type": "integer" },
+    "sender_name": { "type": "string" },
+    "receiver_id": { "type": "integer" },
+    "content": { "type": "string" },
+    "image": { "type": "string" },
+    "type": { "type": "string" },
+    "is_typing": { "type": "boolean" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  },
+  "required": [
+    "chat_id",
+    "content",
+    "receiver_id",
+    "sender_id",
+    "sender_name",
+    "timestamp",
+    "type"
+  ],
+  "x-readme-ref-name": "MessageBody"
+}

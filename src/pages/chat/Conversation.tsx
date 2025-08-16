@@ -5,7 +5,8 @@ import styles from './styles/chat.module.css';
 import { Message } from "@/utils";
 import { useMessagesAPI } from "@/hooks";
 import { MessageBox } from "./MessageBox";
-import { useGetEncryptedMessagesSuspense, useGetMessagesSuspense } from "@/lib/kubb";
+import { useGetEncryptedMessages, useGetMessages } from "@/lib/kubb";
+import { useGetMessagesChatId } from "@/lib/kubb-he";
 
 interface ConversationProps {
   sender?: User;
@@ -13,223 +14,189 @@ interface ConversationProps {
   chatID: number;
 }
 
-const Conversation: React.FC<ConversationProps> = (props) => {
-  const { reciever, sender, chatID } = props;
-  const [text, setText] = useState<string>('');
-  const [offset, setOffset] = useState<number>(0); 
-  const [encrypted, setEncrypted] = useState(false);
+const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID }) => {
+  const [text, setText] = useState('');
   const [image, setImage] = useState('');
+  const [offset, setOffset] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [total, setTotal] = useState<number | null | undefined>(0);
-  const [loading, setLoading] = useState<boolean>(false);
-  const prevChatIDRef = useRef<number>();
+  const [total, setTotal] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [encrypted, setEncrypted] = useState(false);
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
   
-  const { sendMessage, sendEncryptedMessage, sendTypingEvent, socketStatus, isTypingMessage } = useMessagesAPI({
+  const { sendMessage, sendEncryptedMessage, setupWebSocketConnection, setupEncryptedWebSocketConnection, sendTypingEvent, socketStatus, socketRef, isTypingMessage } = useMessagesAPI({
     sender: sender!,
     targetUser: reciever.id!,
-    chatID: chatID,
-    offset: offset,
+    chatID,
+    offset,
+  });
+
+  useEffect(() => {
+    if (!reciever || !chatID) return;
+
+    if (socketRef.current) {
+      socketRef.current.close();
+    }
+
+    if (encrypted) {
+      setupEncryptedWebSocketConnection();
+    } else {
+      setupWebSocketConnection();
+    }
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+    };
+  }, [reciever, chatID, encrypted]);
+
+  const messageEndRef = useRef<HTMLDivElement | null>(null);
+  const messageContainerRef = useRef<HTMLDivElement | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const getMessagesQuery = useGetMessages(chatID, {
+        skip: offset,
+        sort_by: "id",
+        order_by: "DESC",
+  }); 
+
+  const getEncryptedMessagesQuery = useGetMessagesChatId(chatID, {
+        skip: offset,
+        sort_by: "id",
+        order_by: "DESC",
   });
 
 
-  useEffect(() => {
-    // Avoid calling fetchMessages if the chatID hasn't actually changed
-    if (chatID !== prevChatIDRef.current) {
-      fetchMessages(offset);
-      prevChatIDRef.current = chatID;
-    }
-  }, [chatID, offset]);  
-  
-  useEffect(() => {
-    if (!socketStatus) {
-      console.log('Handling WebSocket disconnect state...');
-      fetchMessages(offset); // Refetch messages
-    }
-  }, [socketStatus]);
+  const fetchMessages = async () => {
+    setLoading(true);
+    try {
+      const api = encrypted ? getEncryptedMessagesQuery : getMessagesQuery;
+      const { data } = await api.refetch({});
 
-  
-  const messageEndRef = useRef<HTMLDivElement | null>(null);
-  const messageContainerRef = useRef<HTMLDivElement | null>(null);
-  let typingTimeout: NodeJS.Timeout | null = null;
-  
-  // Handle submit message
-  const handleSubmitMessage = async (message: Message) => {
-    if (reciever && (text.trim() || image)) {
-      try {
-        if (!encrypted) {
-          console.log("Sending non encrypted message")
-          await sendMessage(text.trim(), image);
-        } else {
-          console.log("Sending encrypted message")
-          await sendEncryptedMessage(text.trim(), image);
-        }
-        setText('');
-        setImage('');
-      } catch (err) {
-        console.error('Failed to send message:', err);
-      }
+      const newMessages = data?.array!.reverse() || [];
+
+      setMessages(prev => {
+        const existing = new Set(prev.map(m => m?.timestamp! + m?.content!));
+        const filtered = newMessages.filter(m => !existing.has(m?.timestamp! + m?.content!));
+        return [...filtered, ...prev];
+      });
+      console.log(messages)
+      setShouldScrollToBottom(false);
+      setTotal(data?.meta?.total ?? 0);
+    } catch (err) {
+      console.error("Fetch messages failed", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-
-  const isTyping = (
-    ) => {
-      // Clear the timeout if it exists to reset the debounce
-      if (typingTimeout) return;
-      
-      // Notify that the user is typing
-      sendTypingEvent(true);
-
-      // Set a new timeout to indicate "stopped typing" after 2 seconds of no input
-      typingTimeout = setTimeout(() => {
-        sendTypingEvent(false);
-      }, 2000); // Adjust debounce delay as needed
-  };
-  
-  const fetchMessages =  (offset : number) => {
-      try {
-        setLoading(true);
-        const getMessages = useGetMessagesSuspense(chatID, {
-          skip : offset,
-          sort_by : "id",
-          order_by: "DESC"
-        });
-        // Append new messages at the top of the list, while maintaining existing ones
-        setMessages([
-          ...getMessages.data?.array!.reverse(),
-          ...messages,
-        ]);
-        setTotal(getMessages.data?.meta!.total);
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  const fetchMessagesEncrypted = (offset : number) => {
-      try {
-        setLoading(true);
-        const getEncryptedMessages = useGetEncryptedMessagesSuspense(chatID, {
-          skip : offset,
-          sort_by : "id",
-          order_by: "DESC"
-        }); 
-        // Append new messages at the top of the list, while maintaining existing ones
-        setMessages([
-          ...getEncryptedMessages.data?.array!.reverse(),
-          ...messages,
-        ]);
-        setTotal(getEncryptedMessages.data?.meta!.total);
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const container = event.currentTarget;
-    const top = container.scrollTop === 0; 
-    const messagesPerRequest = 10; 
-    const isNotLoading = !loading;
-
-    const remainingMessages = Math.max(0, total! - offset); // Prevent negative remaining messages
-
-    console.log('Remaining Messages:', remainingMessages);
-    console.log('Is Not Loading:', isNotLoading);
-    console.log('At the top:', top);
-
-    if (top && isNotLoading && remainingMessages > 0) {
-      const nextOffset = offset + messagesPerRequest;
-
-      console.log('At the offset:', offset);
-      const fetchMessagesAPI = () => {
-        const newOffset = nextOffset <= total! ? nextOffset : offset + remainingMessages;
-        setOffset(newOffset); // Update the offset
-
-        fetchMessages(newOffset);
-      };
-
-      fetchMessagesAPI(); // Call to load and append new messages
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const container = e.currentTarget;
+    if (container.scrollTop === 0 && !loading && total !== null && offset < total) {
+      setOffset(prev => Math.min(prev + 10, total));
     }
   };
 
-  // Scroll to the bottom when new messages arrive
   useEffect(() => {
-    if (messageEndRef.current) {
+    setMessages([]);
+    setOffset(0);
+    fetchMessages(); 
+  }, [chatID, encrypted]);
+
+  useEffect(() => {
+    if (offset === 0) return;
+    fetchMessages();
+  }, [offset]);
+  
+  useEffect(() => {
+    if (shouldScrollToBottom && messageEndRef.current) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]); // Trigger scroll to the bottom when messages change
+  }, [messages, shouldScrollToBottom]);
 
   useEffect(() => {
-    if (!socketStatus) {
-      setOffset(0)
+    if (!socketStatus) setOffset(0);
+  }, [socketStatus]);
+
+  const handleSubmitMessage = async () => {
+    console.log("Reached here")
+    if (!text.trim() && !image) return; 
+
+    
+    const now = Date.now();
+
+    const optimisticMessage: Message = {
+      content: text.trim(),
+      image,
+      chat_id: chatID,
+      sender_id: sender?.id!,
+      sender_name: sender?.username!,
+      receiver_id: reciever.id!,
+      type: image ? "image" : "text",
+      is_typing: false,
+      timestamp: now.toString(),
+    };
+
+    try {
+      setMessages((prev) => [...prev, optimisticMessage]);
+
+      if (encrypted) {
+        await sendEncryptedMessage(text.trim(), image);
+      } else {
+        await sendMessage(text.trim(), image);
+      }
+
+      setText('');
+      setImage('');
+    } catch (err) {
+      console.error('Failed to send message:', err);
     }
-  }, [socketStatus]); // Trigger scroll to the bottom when messages change
+  };
 
 
-  // Scroll to the bottom when messages load
-  useEffect(() => {
-    const container = messageContainerRef.current;
-    if (container) {
-      container.scrollTop = container.scrollHeight;
-    }
-  }, [messages]);
+  const isTyping = () => {
+    if (typingTimeoutRef.current) return;
+    sendTypingEvent(true);
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingEvent(false);
+      typingTimeoutRef.current = null;
+    }, 2000);
+  };
 
   return (
     <div className={'flex flex-col gap-2 min-h-screen'}>
       <header className={`flex flex-col gap-4 p-3 ${styles.header}`}>
         <div className={'flex flex-row bg-gray-100 gap-2 py-2 px-3 justify-between rounded-lg'}>
           <div className={'flex gap-2'}>
-            {/* Avatar */}
             <div className={'w-10 h-10 rounded-full bg-gray-300'}>
               {reciever?.username ? (
-                <img
-                  referrerPolicy={'no-referrer'}
-                  alt={reciever?.username}
-                  className={'w-full h-full rounded-full'}
-                />
+                <img referrerPolicy={'no-referrer'} alt={reciever.username} className={'w-full h-full rounded-full'} />
               ) : (
                 <div className={'w-full h-full rounded-full flex justify-center items-center'}>
-                  <span className={'text-2xl font-bold text-black'}>
-                    {reciever?.username?.charAt(0)}
-                  </span>
+                  <span className={'text-2xl font-bold text-black'}>{reciever?.username?.charAt(0)}</span>
                 </div>
               )}
             </div>
             <div className={'flex flex-col justify-between'}>
-              {/* Name */}
-              <h4 className={'text-base font-semibold text-ellipsis line-clamp-1'}>
-                {reciever?.username}
-              </h4>
-              {/* Status */}
+              <h4 className={'text-base font-semibold text-ellipsis line-clamp-1'}>{reciever?.username}</h4>
               <span className={'text-xs text-gray-500'}>{reciever?.created_at}</span>
             </div>
           </div>
-          {/* Toggle Encryption */}
-          <button
-            className="px-4 py-1 text-sm bg-gray-300 hover:bg-gray-400 rounded transition"
-            onClick={() => setEncrypted(prev => !prev)}
-          >
+          <button className="px-4 py-1 text-sm bg-gray-300 hover:bg-gray-400 rounded transition" onClick={() => setEncrypted(e => !e)}>
             {encrypted ? 'Disable Encryption' : 'Enable Encryption'}
           </button>
         </div>
       </header>
 
-      {/* Chat List */}
       <div
         className="flex flex-1 flex-col gap-2"
         ref={messageContainerRef}
-        style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 150px)' }} // Set a fixed height with vertical overflow
+        style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 150px)' }}
         onScroll={handleScroll}
       >
-        {/* Render messages from most recent to oldest */}
-        {messages.map((msg: Message, index: number) => {
-          const username = msg.sender_name;
-          return <MessageBox key={index} message={msg} username={username} />;
-        })}
-        {/* Typing Indicator */}
+        {messages.map((msg, idx) => <MessageBox key={idx} message={msg} username={msg.sender_name} />)}
+
         {isTypingMessage && (
           <div className="flex items-center gap-1 px-4 h-6">
             <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
@@ -237,31 +204,29 @@ const Conversation: React.FC<ConversationProps> = (props) => {
             <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-[400ms]"></span>
           </div>
         )}
-        {/* Scroll to the bottom of the messages */}
+
         <div ref={messageEndRef} />
       </div>
 
-      {/* Chat input */}
-      <div>
-        <UserInput
-          value={text}
-          onChange={(value) => {
-            setText(value);
-            isTyping();
-          }}
-          onImageChange={(file) => {
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setImage(reader.result as string);
-              isTyping();
-            };
-            reader.readAsDataURL(file);
+      <UserInput
+        value={text}
+        image={image}
+        onChange={(val) => {
+          setText(val);
+          isTyping();
         }}
-          onSubmit={handleSubmitMessage}
-          key={reciever?.id}
+        onImageChange={(file) => {
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setImage(reader.result as string);
+            isTyping();
+          };
+          reader.readAsDataURL(file);
+        }}
+        onSubmit={handleSubmitMessage}
+        key={reciever?.id}
       />
-      </div>
     </div>
   );
 };

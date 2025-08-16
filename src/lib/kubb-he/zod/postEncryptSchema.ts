@@ -5,6 +5,7 @@
 
 import { errorSchema } from "./errorSchema";
 import { errorTypeSchema } from "./errorTypeSchema";
+import { messageBodySchema } from "./messageBodySchema";
 import { messageSchema } from "./messageSchema";
 import { z } from "zod";
 
@@ -28,7 +29,7 @@ export const postEncrypt422Schema = z.lazy(() => errorSchema);
  */
 export const postEncryptErrorSchema = z.lazy(() => errorSchema);
 
-export const postEncryptMutationRequestSchema = z.lazy(() => messageSchema);
+export const postEncryptMutationRequestSchema = z.lazy(() => messageBodySchema);
 
 export const postEncryptMutationResponseSchema = z.lazy(
   () => postEncrypt200Schema,
