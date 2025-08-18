@@ -1,4 +1,3 @@
-import { Loader } from '@/components'
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useContext } from 'react'
 import { PostAuthResponse, usePostAuth } from '@/lib/kubb'
@@ -14,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import * as z from "zod";
 import { Link, NavLink, useNavigate } from "react-router";
-import ConfirmationDialog from "@/components/auth/ConfirmationDialog";
 import { loadCredentials } from '@/hooks';
 import Layout from './layout';
 
