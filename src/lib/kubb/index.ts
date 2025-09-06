@@ -1,7 +1,5 @@
 export type { GetChatsQueryKey } from "./hooks/useGetChats";
 export type { GetChatsSuspenseQueryKey } from "./hooks/useGetChatsSuspense";
-export type { GetEncryptedMessagesQueryKey } from "./hooks/useGetEncryptedMessages";
-export type { GetEncryptedMessagesSuspenseQueryKey } from "./hooks/useGetEncryptedMessagesSuspense";
 export type { GetMessagesQueryKey } from "./hooks/useGetMessages";
 export type { GetMessagesCountQueryKey } from "./hooks/useGetMessagesCount";
 export type { GetMessagesCountSuspenseQueryKey } from "./hooks/useGetMessagesCountSuspense";
@@ -15,6 +13,7 @@ export type { GetUserSuspenseQueryKey } from "./hooks/useGetUserSuspense";
 export type { PostAuthMutationKey } from "./hooks/usePostAuth";
 export type { PostAuthSignUpMutationKey } from "./hooks/usePostAuthSignUp";
 export type { PostChatsMutationKey } from "./hooks/usePostChats";
+export type { PostEvaluationKeyMutationKey } from "./hooks/usePostEvaluationKey";
 export type { ErrorResponse } from "./types/ErrorResponse";
 export type {
   GetChats,
@@ -24,16 +23,6 @@ export type {
   GetChatsQueryResponse,
   GetChatsQuery,
 } from "./types/GetChats";
-export type {
-  GetEncryptedMessages,
-  GetEncryptedMessagesPathParams,
-  GetEncryptedMessagesQueryParams,
-  GetEncryptedMessages200,
-  GetEncryptedMessages400,
-  GetEncryptedMessagesError,
-  GetEncryptedMessagesQueryResponse,
-  GetEncryptedMessagesQuery,
-} from "./types/GetEncryptedMessages";
 export type {
   GetMessages,
   GetMessagesPathParams,
@@ -107,6 +96,16 @@ export type {
   PostChatsMutation,
 } from "./types/PostChats";
 export type { PostChatsResponse } from "./types/PostChatsResponse";
+export type {
+  PostEvaluationKey,
+  PostEvaluationKey200,
+  PostEvaluationKey400,
+  PostEvaluationKeyError,
+  PostEvaluationKeyMutationRequest,
+  PostEvaluationKeyMutationResponse,
+  PostEvaluationKeyMutation,
+} from "./types/PostEvaluationKey";
+export type { PostEvaluationKeyBody } from "./types/PostEvaluationKeyBody";
 export type { PostSignUpResponse } from "./types/PostSignUpResponse";
 export {
   getChatsQueryKey,
@@ -120,18 +119,6 @@ export {
   getChatsSuspenseQueryOptions,
   useGetChatsSuspense,
 } from "./hooks/useGetChatsSuspense";
-export {
-  getEncryptedMessagesQueryKey,
-  getEncryptedMessages,
-  getEncryptedMessagesQueryOptions,
-  useGetEncryptedMessages,
-} from "./hooks/useGetEncryptedMessages";
-export {
-  getEncryptedMessagesSuspenseQueryKey,
-  getEncryptedMessagesSuspense,
-  getEncryptedMessagesSuspenseQueryOptions,
-  useGetEncryptedMessagesSuspense,
-} from "./hooks/useGetEncryptedMessagesSuspense";
 export {
   getMessagesQueryKey,
   getMessages,
@@ -207,6 +194,11 @@ export {
   postChats,
   usePostChats,
 } from "./hooks/usePostChats";
+export {
+  postEvaluationKeyMutationKey,
+  postEvaluationKey,
+  usePostEvaluationKey,
+} from "./hooks/usePostEvaluationKey";
 export { errorResponseSchema } from "./zod/errorResponseSchema";
 export {
   getChatsSchema,
@@ -215,15 +207,6 @@ export {
   getChatsErrorSchema,
   getChatsQueryResponseSchema,
 } from "./zod/getChatsSchema";
-export {
-  getEncryptedMessagesSchema,
-  getEncryptedMessagesPathParamsSchema,
-  getEncryptedMessagesQueryParamsSchema,
-  getEncryptedMessages200Schema,
-  getEncryptedMessages400Schema,
-  getEncryptedMessagesErrorSchema,
-  getEncryptedMessagesQueryResponseSchema,
-} from "./zod/getEncryptedMessagesSchema";
 export {
   getMessagesCountPathParamsSchema,
   getMessagesCountQueryParamsSchema,
@@ -289,4 +272,13 @@ export {
   postChatsMutationRequestSchema,
   postChatsMutationResponseSchema,
 } from "./zod/postChatsSchema";
+export { postEvaluationKeyBodySchema } from "./zod/postEvaluationKeyBodySchema";
+export {
+  postEvaluationKeySchema,
+  postEvaluationKey200Schema,
+  postEvaluationKey400Schema,
+  postEvaluationKeyErrorSchema,
+  postEvaluationKeyMutationRequestSchema,
+  postEvaluationKeyMutationResponseSchema,
+} from "./zod/postEvaluationKeySchema";
 export { postSignUpResponseSchema } from "./zod/postSignUpResponseSchema";

@@ -18,6 +18,10 @@ export type GetMessages = {
     /**
      * @type string | undefined
      */
+    classification_result?: string;
+    /**
+     * @type string | undefined
+     */
     content?: string;
     /**
      * @minLength 0
@@ -32,6 +36,10 @@ export type GetMessages = {
      * @type boolean | undefined
      */
     is_typing?: boolean;
+    /**
+     * @type string | undefined
+     */
+    iv?: string;
     /**
      * @minLength 0
      * @type integer | undefined

@@ -1,4 +1,8 @@
+export type { DecryptedMessage } from "./DecryptedMessage";
+export type { DecryptMessageBody } from "./DecryptMessageBody";
 export type { DEFAULTERROR } from "./DEFAULTERROR";
+export type { EncryptedMessage } from "./EncryptedMessage";
+export type { EncryptMessageBody } from "./EncryptMessageBody";
 export type { Error } from "./Error";
 export type { ErrorType } from "./ErrorType";
 export type { GetMessages200 } from "./GetMessages200";
@@ -12,8 +16,14 @@ export type {
   GetMessagesChatIdQueryResponse,
   GetMessagesChatIdQuery,
 } from "./GetMessagesChatId";
-export type { Message } from "./Message";
-export type { MessageBody } from "./MessageBody";
+export type {
+  GetNormalKeysChatIdPathParams,
+  GetNormalKeysChatId200,
+  GetNormalKeysChatId400,
+  GetNormalKeysChatIdError,
+  GetNormalKeysChatIdQueryResponse,
+  GetNormalKeysChatIdQuery,
+} from "./GetNormalKeysChatId";
 export type { Meta } from "./Meta";
 export type { PaginationMetadata } from "./PaginationMetadata";
 export type {

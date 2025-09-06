@@ -5,8 +5,10 @@ import styles from './styles/chat.module.css';
 import { Message } from "@/utils";
 import { useMessagesAPI } from "@/hooks";
 import { MessageBox } from "./MessageBox";
-import { useGetEncryptedMessages, useGetMessages } from "@/lib/kubb";
-import { useGetMessagesChatId } from "@/lib/kubb-he";
+import { useGetMessages } from "@/lib/kubb";
+import { EncryptedMessage, getNormalKeysChatIdSuspense, useGetMessagesChatId, useGetNormalKeysChatId, useGetNormalKeysChatIdSuspense } from "@/lib/kubb-he";
+import path from "path";
+import fs from 'fs';
 
 interface ConversationProps {
   sender?: User;
@@ -23,8 +25,25 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
   const [loading, setLoading] = useState(false);
   const [encrypted, setEncrypted] = useState(false);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
+ 
+  const getNormalKeys = useGetNormalKeysChatId(chatID);
   
-  const { sendMessage, sendEncryptedMessage, setupWebSocketConnection, setupEncryptedWebSocketConnection, sendTypingEvent, socketStatus, socketRef, isTypingMessage } = useMessagesAPI({
+  const checkFilesAndRequest = (chatID : number) => {
+        try {
+          useGetNormalKeysChatId(chatID).refetch();
+          console.log(getNormalKeys)
+        } catch (error) {
+          console.error("Error sending request:", error);
+        }
+  };
+
+  useEffect(() => {
+    if (chatID) {
+      checkFilesAndRequest(chatID);
+    }
+  }, [chatID]);
+
+  const { sendMessage, sendEncryptedMessage, setupWebSocketConnection, sendTypingEvent, socketStatus, socketRef, isTypingMessage } = useMessagesAPI({
     sender: sender!,
     targetUser: reciever.id!,
     chatID,
@@ -38,18 +57,14 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
       socketRef.current.close();
     }
 
-    if (encrypted) {
-      setupEncryptedWebSocketConnection();
-    } else {
-      setupWebSocketConnection();
-    }
+    setupWebSocketConnection();
 
     return () => {
       if (socketRef.current) {
         socketRef.current.close();
       }
     };
-  }, [reciever, chatID, encrypted]);
+  }, [reciever, chatID]);
 
   const messageEndRef = useRef<HTMLDivElement | null>(null);
   const messageContainerRef = useRef<HTMLDivElement | null>(null);
@@ -61,17 +76,10 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
         order_by: "DESC",
   }); 
 
-  const getEncryptedMessagesQuery = useGetMessagesChatId(chatID, {
-        skip: offset,
-        sort_by: "id",
-        order_by: "DESC",
-  });
-
-
   const fetchMessages = async () => {
     setLoading(true);
     try {
-      const api = encrypted ? getEncryptedMessagesQuery : getMessagesQuery;
+      const api = getMessagesQuery;
       const { data } = await api.refetch({});
 
       const newMessages = data?.array!.reverse() || [];
@@ -102,7 +110,7 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
     setMessages([]);
     setOffset(0);
     fetchMessages(); 
-  }, [chatID, encrypted]);
+  }, [chatID]);
 
   useEffect(() => {
     if (offset === 0) return;
@@ -126,7 +134,7 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
     
     const now = Date.now();
 
-    const optimisticMessage: Message = {
+    const optimisticMessage: EncryptedMessage = {
       content: text.trim(),
       image,
       chat_id: chatID,
@@ -141,11 +149,7 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
     try {
       setMessages((prev) => [...prev, optimisticMessage]);
 
-      if (encrypted) {
-        await sendEncryptedMessage(text.trim(), image);
-      } else {
-        await sendMessage(text.trim(), image);
-      }
+      await sendEncryptedMessage(text.trim(), image);
 
       setText('');
       setImage('');

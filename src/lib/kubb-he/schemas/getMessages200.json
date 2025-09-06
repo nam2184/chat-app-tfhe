@@ -6,28 +6,29 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": { "type": "integer" },
           "chat_id": { "type": "integer" },
           "sender_id": { "type": "integer" },
           "sender_name": { "type": "string" },
           "receiver_id": { "type": "integer" },
           "content": { "type": "string" },
+          "iv": { "type": "string" },
           "image": { "type": "string" },
+          "image_to_classify": { "type": "string" },
           "type": { "type": "string" },
           "is_typing": { "type": "boolean" },
-          "timestamp": { "type": "string", "format": "date-time" }
+          "timestamp": { "type": "string", "format": "date-time" },
+          "classification_result": { "type": "string" }
         },
         "required": [
           "chat_id",
           "content",
-          "id",
           "receiver_id",
           "sender_id",
           "sender_name",
           "timestamp",
           "type"
         ],
-        "x-readme-ref-name": "Message"
+        "x-readme-ref-name": "EncryptedMessage"
       }
     },
     "meta": {

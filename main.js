@@ -10,7 +10,7 @@ const __dirname = dirname(__filename);let mainWindow;
 
 function startPythonServer() {
   return new Promise((resolve, reject) => {
-    const scriptPath = path.join(__dirname, 'he', 'client.py');
+    const scriptPath = path.join(__dirname, 'client-encrypt', 'client.py');
     const process = spawn('python3', [scriptPath]);
 
     process.stdout.on('data', (data) => {
@@ -39,7 +39,7 @@ app.whenReady().then(async () => {
     },
   });
  
-  
+  startPythonServer()  
   if (process.env.NODE_ENV === "development") {
     mainWindow.loadURL("http://localhost:5173"); // Vite default
   } else {

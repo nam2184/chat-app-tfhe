@@ -11,10 +11,12 @@ export const getMessagesSchema = z.object({
     .array(
       z.object({
         chat_id: z.number().int().min(0).optional(),
+        classification_result: z.string().optional(),
         content: z.string().optional(),
         id: z.number().int().min(0).optional(),
         image: z.string().optional(),
         is_typing: z.boolean().optional(),
+        iv: z.string().optional(),
         receiver_id: z.number().int().min(0).optional(),
         sender_id: z.number().int().min(0).optional(),
         sender_name: z.string().optional(),

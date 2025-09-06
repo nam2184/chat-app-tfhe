@@ -3,16 +3,16 @@
  * Do not edit manually.
  */
 
+import { decryptedMessageSchema } from "./decryptedMessageSchema";
+import { encryptMessageBodySchema } from "./encryptMessageBodySchema";
 import { errorSchema } from "./errorSchema";
 import { errorTypeSchema } from "./errorTypeSchema";
-import { messageBodySchema } from "./messageBodySchema";
-import { messageSchema } from "./messageSchema";
 import { z } from "zod";
 
 /**
  * @description OK
  */
-export const postMessage200Schema = z.lazy(() => messageSchema);
+export const postMessage200Schema = z.lazy(() => decryptedMessageSchema);
 
 /**
  * @description Bad Request
@@ -29,7 +29,9 @@ export const postMessage422Schema = z.lazy(() => errorSchema);
  */
 export const postMessageErrorSchema = z.lazy(() => errorSchema);
 
-export const postMessageMutationRequestSchema = z.lazy(() => messageBodySchema);
+export const postMessageMutationRequestSchema = z.lazy(
+  () => encryptMessageBodySchema,
+);
 
 export const postMessageMutationResponseSchema = z.lazy(
   () => postMessage200Schema,

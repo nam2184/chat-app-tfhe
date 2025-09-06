@@ -1,0 +1,8 @@
+{
+  "properties": {
+    "chat_id": { "minimum": 0, "type": "integer" },
+    "file": { "type": "string" }
+  },
+  "type": "object",
+  "x-readme-ref-name": "PostEvaluationKeyBody"
+}

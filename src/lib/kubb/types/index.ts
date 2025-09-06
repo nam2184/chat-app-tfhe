@@ -8,16 +8,6 @@ export type {
   GetChatsQuery,
 } from "./GetChats";
 export type {
-  GetEncryptedMessages,
-  GetEncryptedMessagesPathParams,
-  GetEncryptedMessagesQueryParams,
-  GetEncryptedMessages200,
-  GetEncryptedMessages400,
-  GetEncryptedMessagesError,
-  GetEncryptedMessagesQueryResponse,
-  GetEncryptedMessagesQuery,
-} from "./GetEncryptedMessages";
-export type {
   GetMessages,
   GetMessagesPathParams,
   GetMessagesQueryParams,
@@ -90,4 +80,14 @@ export type {
   PostChatsMutation,
 } from "./PostChats";
 export type { PostChatsResponse } from "./PostChatsResponse";
+export type {
+  PostEvaluationKey,
+  PostEvaluationKey200,
+  PostEvaluationKey400,
+  PostEvaluationKeyError,
+  PostEvaluationKeyMutationRequest,
+  PostEvaluationKeyMutationResponse,
+  PostEvaluationKeyMutation,
+} from "./PostEvaluationKey";
+export type { PostEvaluationKeyBody } from "./PostEvaluationKeyBody";
 export type { PostSignUpResponse } from "./PostSignUpResponse";

@@ -1,4 +1,8 @@
+export { decryptedMessageSchema } from "./decryptedMessageSchema";
+export { decryptMessageBodySchema } from "./decryptMessageBodySchema";
 export { DEFAULTERRORSchema } from "./DEFAULTERRORSchema";
+export { encryptedMessageSchema } from "./encryptedMessageSchema";
+export { encryptMessageBodySchema } from "./encryptMessageBodySchema";
 export { errorSchema } from "./errorSchema";
 export { errorTypeSchema } from "./errorTypeSchema";
 export { getMessages200Schema } from "./getMessages200Schema";
@@ -11,8 +15,13 @@ export {
   getMessagesChatIdErrorSchema,
   getMessagesChatIdQueryResponseSchema,
 } from "./getMessagesChatIdSchema";
-export { messageBodySchema } from "./messageBodySchema";
-export { messageSchema } from "./messageSchema";
+export {
+  getNormalKeysChatIdPathParamsSchema,
+  getNormalKeysChatId200Schema,
+  getNormalKeysChatId400Schema,
+  getNormalKeysChatIdErrorSchema,
+  getNormalKeysChatIdQueryResponseSchema,
+} from "./getNormalKeysChatIdSchema";
 export { metaSchema } from "./metaSchema";
 export { paginationMetadataSchema } from "./paginationMetadataSchema";
 export {

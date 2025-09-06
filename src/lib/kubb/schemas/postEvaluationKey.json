@@ -1,0 +1,9 @@
+{
+  "properties": {
+    "chat_id": { "format": "int32", "type": "integer" },
+    "file": { "type": "string" },
+    "id": { "type": "string" }
+  },
+  "type": "object",
+  "x-readme-ref-name": "PostEvaluationKey"
+}

@@ -97,63 +97,6 @@
         },
         "type": "object"
       },
-      "GetEncryptedMessages": {
-        "properties": {
-          "array": {
-            "items": {
-              "properties": {
-                "chat_id": {
-                  "minimum": 0,
-                  "type": "integer"
-                },
-                "content": {
-                  "type": "string"
-                },
-                "id": {
-                  "minimum": 0,
-                  "type": "integer"
-                },
-                "image": {
-                  "type": "string"
-                },
-                "is_typing": {
-                  "type": "boolean"
-                },
-                "receiver_id": {
-                  "minimum": 0,
-                  "type": "integer"
-                },
-                "sender_id": {
-                  "minimum": 0,
-                  "type": "integer"
-                },
-                "sender_name": {
-                  "type": "string"
-                },
-                "timestamp": {
-                  "format": "date-time",
-                  "type": "string"
-                },
-                "type": {
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            },
-            "type": "array"
-          },
-          "meta": {
-            "properties": {
-              "total": {
-                "nullable": true,
-                "type": "integer"
-              }
-            },
-            "type": "object"
-          }
-        },
-        "type": "object"
-      },
       "GetMessages": {
         "properties": {
           "array": {
@@ -163,6 +106,9 @@
                   "minimum": 0,
                   "type": "integer"
                 },
+                "classification_result": {
+                  "type": "string"
+                },
                 "content": {
                   "type": "string"
                 },
@@ -175,6 +121,9 @@
                 },
                 "is_typing": {
                   "type": "boolean"
+                },
+                "iv": {
+                  "type": "string"
                 },
                 "receiver_id": {
                   "minimum": 0,
@@ -426,6 +375,33 @@
         },
         "type": "object"
       },
+      "PostEvaluationKey": {
+        "properties": {
+          "chat_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "file": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PostEvaluationKeyBody": {
+        "properties": {
+          "chat_id": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "file": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "PostSignUpResponse": {
         "properties": {
           "email": {
@@ -641,57 +617,30 @@
         "summary": "Post chat"
       }
     },
-    "/encrypted-messages/{chatID}": {
-      "get": {
-        "operationId": "GetEncryptedMessages",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "chatID",
-            "required": true,
-            "schema": {
-              "type": "integer"
+    "/key": {
+      "post": {
+        "operationId": "PostEvaluationKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostEvaluationKeyBody"
+              }
             }
           },
-          {
-            "in": "query",
-            "name": "skip",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "order_by",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "sort_by",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+          "description": "Send evaluation key to model service body",
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetEncryptedMessages"
+                  "$ref": "#/components/schemas/PostEvaluationKey"
                 }
               }
             },
-            "description": "Encrypted Messages retrieved"
+            "description": "Send eval key success"
           },
           "400": {
             "content": {
@@ -707,7 +656,7 @@
             "description": ""
           }
         },
-        "summary": "Get messages for a chat"
+        "summary": "Sende evaluation key to model service"
       }
     },
     "/messages/{chatID}": {

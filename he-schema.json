@@ -1,5 +1,79 @@
 {
   "paths": {
+    "/client/{user_id}": {
+      "get": {
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorType"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK"
+          },
+          "default": {
+            "$ref": "#/components/responses/DEFAULT_ERROR"
+          }
+        },
+        "tags": [
+          "client"
+        ],
+        "description": "Encrypt image using FHE."
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "user_id",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      ]
+    },
+    "/normal_keys/{chat_id}": {
+      "get": {
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorType"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK"
+          },
+          "default": {
+            "$ref": "#/components/responses/DEFAULT_ERROR"
+          }
+        },
+        "tags": [
+          "client"
+        ],
+        "description": "Encrypt image using FHE."
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "chat_id",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      ]
+    },
     "/encrypt": {
       "post": {
         "responses": {
@@ -21,7 +95,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Message"
+                  "$ref": "#/components/schemas/EncryptedMessage"
                 }
               }
             }
@@ -35,12 +109,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MessageBody"
+                "$ref": "#/components/schemas/EncryptMessageBody"
               }
             }
           }
         },
-        "tags": ["client"],
+        "tags": [
+          "client"
+        ],
         "description": "Encrypt image using FHE."
       }
     },
@@ -65,7 +141,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Message"
+                  "$ref": "#/components/schemas/DecryptedMessage"
                 }
               }
             }
@@ -79,12 +155,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MessageBody"
+                "$ref": "#/components/schemas/DecryptMessageBody"
               }
             }
           }
         },
-        "tags": ["client"],
+        "tags": [
+          "client"
+        ],
         "description": "Decrypt encrypted image using FHE."
       }
     },
@@ -109,7 +187,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Message"
+                  "$ref": "#/components/schemas/DecryptedMessage"
                 }
               }
             }
@@ -123,12 +201,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/MessageBody"
+                "$ref": "#/components/schemas/EncryptMessageBody"
               }
             }
           }
         },
-        "tags": ["client"],
+        "tags": [
+          "client"
+        ],
         "description": "Insert a message into the database."
       }
     },
@@ -188,7 +268,9 @@
             "$ref": "#/components/responses/DEFAULT_ERROR"
           }
         },
-        "tags": ["client"],
+        "tags": [
+          "client"
+        ],
         "description": "Get messages by chat ID with optional sorting and pagination."
       },
       "parameters": [
@@ -265,7 +347,22 @@
           }
         }
       },
-      "MessageBody": {
+      "ErrorType": {
+        "type": "object",
+        "properties": {
+          "section": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "section"
+        ]
+      },
+      "EncryptMessageBody": {
         "type": "object",
         "properties": {
           "chat_id": {
@@ -295,6 +392,9 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
+          },
+          "classification_result": {
+            "type": "string"
           }
         },
         "required": [
@@ -307,24 +407,60 @@
           "type"
         ]
       },
-      "ErrorType": {
+      "EncryptedMessage": {
         "type": "object",
         "properties": {
-          "section": {
+          "chat_id": {
+            "type": "integer"
+          },
+          "sender_id": {
+            "type": "integer"
+          },
+          "sender_name": {
             "type": "string"
           },
-          "message": {
+          "receiver_id": {
+            "type": "integer"
+          },
+          "content": {
+            "type": "string"
+          },
+          "iv": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "image_to_classify": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "is_typing": {
+            "type": "boolean"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "classification_result": {
             "type": "string"
           }
         },
-        "required": ["message", "section"]
+        "required": [
+          "chat_id",
+          "content",
+          "receiver_id",
+          "sender_id",
+          "sender_name",
+          "timestamp",
+          "type"
+        ]
       },
-      "Message": {
+      "DecryptMessageBody": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer"
-          },
           "chat_id": {
             "type": "integer"
           },
@@ -343,6 +479,12 @@
           "image": {
             "type": "string"
           },
+          "image_to_classify": {
+            "type": "string"
+          },
+          "iv": {
+            "type": "string"
+          },
           "type": {
             "type": "string"
           },
@@ -352,12 +494,64 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
+          },
+          "classification_result": {
+            "type": "string"
           }
         },
         "required": [
           "chat_id",
+          "classification_result",
           "content",
-          "id",
+          "receiver_id",
+          "sender_id",
+          "sender_name",
+          "timestamp",
+          "type"
+        ]
+      },
+      "DecryptedMessage": {
+        "type": "object",
+        "properties": {
+          "chat_id": {
+            "type": "integer"
+          },
+          "sender_id": {
+            "type": "integer"
+          },
+          "sender_name": {
+            "type": "string"
+          },
+          "receiver_id": {
+            "type": "integer"
+          },
+          "content": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "iv": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "is_typing": {
+            "type": "boolean"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "classification_result": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "chat_id",
+          "classification_result",
+          "content",
           "receiver_id",
           "sender_id",
           "sender_name",
@@ -379,19 +573,22 @@
           "array": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Message"
+              "$ref": "#/components/schemas/EncryptedMessage"
             }
           },
           "meta": {
             "$ref": "#/components/schemas/Meta"
           }
         },
-        "required": ["array", "meta"]
+        "required": [
+          "array",
+          "meta"
+        ]
       }
     },
     "responses": {
-      "UNPROCESSABLE_ENTITY": {
-        "description": "Unprocessable Entity",
+      "DEFAULT_ERROR": {
+        "description": "Default error response",
         "content": {
           "application/json": {
             "schema": {
@@ -400,8 +597,8 @@
           }
         }
       },
-      "DEFAULT_ERROR": {
-        "description": "Default error response",
+      "UNPROCESSABLE_ENTITY": {
+        "description": "Unprocessable Entity",
         "content": {
           "application/json": {
             "schema": {

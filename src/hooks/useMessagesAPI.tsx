@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import {Message, User, api } from "@/utils";
-import { postDecrypt, usePostDecrypt, usePostEncrypt, usePostMessage } from "@/lib/kubb-he";
+import { EncryptedMessage, postDecrypt, usePostDecrypt, usePostEncrypt, usePostMessage } from "@/lib/kubb-he";
 
 interface MessageProps {
   sender?: User| undefined;
@@ -17,9 +17,8 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
   
   const postEncryptMutation  = usePostEncrypt();
   const postDecryptMutation  = usePostDecrypt();
-  const postMessage = usePostMessage()
   
-  const setupWebSocketConnection = () => {
+  const setupWebSocketConnection = async () => {
     const accessToken = localStorage.getItem("access_token");
     const socket = new WebSocket(`wss://khanhmychattypi.win/api/v1/ws/${chatID}?access_token=${accessToken}`);
 
@@ -35,45 +34,7 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     };
 
     socket.onmessage = (event) => {
-      const newMessage: Message = JSON.parse(event.data);
-      if (newMessage.type === "typing") {
-        // Update typing status based on incoming event
-        setIsTyping(newMessage.is_typing);
-      } else {
-        // Avoid duplicate messages by checking if the new message already exists
-        setMessages((prev) => {
-          const isDuplicate = prev.some(
-            (msg) => msg.timestamp === newMessage.timestamp && msg.content === newMessage.content
-          );
-          return isDuplicate ? prev : [...prev, newMessage];
-        });
-      }
-    };
-
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
-    socketRef.current = socket;
-  };
-
-  const setupEncryptedWebSocketConnection = async () => {
-    const accessToken = localStorage.getItem("access_token");
-    const socket = new WebSocket(`wss://khanhmychattypi.win/api/v1/ws/encrypted/${chatID}?access_token=${accessToken}`);
-
-    socket.onopen = () => {
-      console.log("WebSocket connected!");
-      setSocketStatus(true); // Set connection status to true
-    };
-
-    socket.onclose = () => {
-      console.log("WebSocket disconnected!");
-      setSocketStatus(false); // Set connection status to false
-      setTimeout(setupWebSocketConnection, 3000);
-    };
-
-    socket.onmessage = (event) => {
-      const newMessage: Message = JSON.parse(event.data);
+      const newMessage: EncryptedMessage = JSON.parse(event.data);
 
       (async () => {
         const decryptedMessage = await decryptData(newMessage);
@@ -91,20 +52,7 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
             );
             return isDuplicate ? prev : [...prev, decryptedMessage!];
           });
-          await postMessage.mutateAsync({ 
-            data : {
-              content: decryptedMessage?.content!,
-              image: decryptedMessage?.image,
-              chat_id: decryptedMessage?.chat_id!, 
-              sender_id: decryptedMessage?.sender_id!,
-              type : decryptedMessage?.type!,
-              sender_name: decryptedMessage?.sender_name!,
-              receiver_id: decryptedMessage?.receiver_id!,
-              is_typing: decryptedMessage?.is_typing,
-              timestamp: decryptedMessage?.timestamp!,
-            }
-          });
-        }
+          }
       })();
     };
 
@@ -154,17 +102,19 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     if (image == "") {
       image = " "
     } 
-    const message: Message = {
+    const message: EncryptedMessage = {
       chat_id: chatID,
       type: "message",
-      sender_id: sender?.id,
-      sender_name: sender?.username,
+      sender_id: sender?.id!,
+      sender_name: sender?.username!,
       receiver_id: targetUser,
       content,
       image,
       timestamp: new Date().toISOString(),
       is_typing: false,
+      classification_result: "",
     };
+
     const encryptedMessage = await encryptData(message)
     try {
       socketRef.current.send(JSON.stringify(encryptedMessage));
@@ -176,19 +126,6 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
         );
         return isDuplicate ? prev : [...prev, message];
       });
-      await postMessage.mutateAsync({ 
-            data : {
-              content: encryptedMessage?.content!,
-              image: encryptedMessage?.image,
-              chat_id: encryptedMessage?.chat_id!, 
-              sender_id: encryptedMessage?.sender_id!,
-              type : encryptedMessage?.type!,
-              sender_name: encryptedMessage?.sender_name!,
-              receiver_id: encryptedMessage?.receiver_id!,
-              is_typing: encryptedMessage?.is_typing,
-              timestamp: encryptedMessage?.timestamp!,
-            }
-          });
     } catch (error) {
       console.error("Error sending message through WebSocket:", error);
     }
@@ -240,12 +177,13 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
         }
     };
 
-    const decryptData = (data : Message) => {
+    const decryptData = (data : EncryptedMessage) => {
         try {
             const response = postDecryptMutation.mutateAsync({ 
               data : {
                 content: data.content!,
                 image: data.image,
+                image_to_classify: data.image_to_classify,
                 chat_id: data.chat_id!, 
                 sender_id: data.sender_id!,
                 type : data.type!,
@@ -253,6 +191,7 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
                 receiver_id: data.receiver_id!,
                 is_typing: data.is_typing,
                 timestamp: data.timestamp!,
+                classification_result: data.classification_result!,
               }
             });
             console.log(response);
@@ -271,7 +210,6 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     socketStatus,
     socketRef,
     setupWebSocketConnection,
-    setupEncryptedWebSocketConnection,
     isTypingMessage
   };
 };

@@ -3,11 +3,11 @@
  * Do not edit manually.
  */
 
-import { messageSchema } from "./messageSchema";
+import { encryptedMessageSchema } from "./encryptedMessageSchema";
 import { metaSchema } from "./metaSchema";
 import { z } from "zod";
 
 export const getMessages200Schema = z.object({
-  array: z.array(z.lazy(() => messageSchema)),
+  array: z.array(z.lazy(() => encryptedMessageSchema)),
   meta: z.lazy(() => metaSchema),
 });

@@ -3,15 +3,15 @@
  * Do not edit manually.
  */
 
+import type { DecryptedMessage } from "./DecryptedMessage";
+import type { EncryptMessageBody } from "./EncryptMessageBody";
 import type { Error } from "./Error";
 import type { ErrorType } from "./ErrorType";
-import type { Message } from "./Message";
-import type { MessageBody } from "./MessageBody";
 
 /**
  * @description OK
  */
-export type PostMessage200 = Message;
+export type PostMessage200 = DecryptedMessage;
 
 /**
  * @description Bad Request
@@ -28,7 +28,7 @@ export type PostMessage422 = Error;
  */
 export type PostMessageError = Error;
 
-export type PostMessageMutationRequest = MessageBody;
+export type PostMessageMutationRequest = EncryptMessageBody;
 
 export type PostMessageMutationResponse = PostMessage200;
 

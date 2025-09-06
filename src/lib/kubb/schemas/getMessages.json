@@ -4,10 +4,12 @@
       "items": {
         "properties": {
           "chat_id": { "minimum": 0, "type": "integer" },
+          "classification_result": { "type": "string" },
           "content": { "type": "string" },
           "id": { "minimum": 0, "type": "integer" },
           "image": { "type": "string" },
           "is_typing": { "type": "boolean" },
+          "iv": { "type": "string" },
           "receiver_id": { "minimum": 0, "type": "integer" },
           "sender_id": { "minimum": 0, "type": "integer" },
           "sender_name": { "type": "string" },

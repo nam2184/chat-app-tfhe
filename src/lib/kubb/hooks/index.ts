@@ -1,7 +1,5 @@
 export type { GetChatsQueryKey } from "./useGetChats";
 export type { GetChatsSuspenseQueryKey } from "./useGetChatsSuspense";
-export type { GetEncryptedMessagesQueryKey } from "./useGetEncryptedMessages";
-export type { GetEncryptedMessagesSuspenseQueryKey } from "./useGetEncryptedMessagesSuspense";
 export type { GetMessagesQueryKey } from "./useGetMessages";
 export type { GetMessagesCountQueryKey } from "./useGetMessagesCount";
 export type { GetMessagesCountSuspenseQueryKey } from "./useGetMessagesCountSuspense";
@@ -15,6 +13,7 @@ export type { GetUserSuspenseQueryKey } from "./useGetUserSuspense";
 export type { PostAuthMutationKey } from "./usePostAuth";
 export type { PostAuthSignUpMutationKey } from "./usePostAuthSignUp";
 export type { PostChatsMutationKey } from "./usePostChats";
+export type { PostEvaluationKeyMutationKey } from "./usePostEvaluationKey";
 export {
   getChatsQueryKey,
   getChats,
@@ -27,18 +26,6 @@ export {
   getChatsSuspenseQueryOptions,
   useGetChatsSuspense,
 } from "./useGetChatsSuspense";
-export {
-  getEncryptedMessagesQueryKey,
-  getEncryptedMessages,
-  getEncryptedMessagesQueryOptions,
-  useGetEncryptedMessages,
-} from "./useGetEncryptedMessages";
-export {
-  getEncryptedMessagesSuspenseQueryKey,
-  getEncryptedMessagesSuspense,
-  getEncryptedMessagesSuspenseQueryOptions,
-  useGetEncryptedMessagesSuspense,
-} from "./useGetEncryptedMessagesSuspense";
 export {
   getMessagesQueryKey,
   getMessages,
@@ -106,3 +93,8 @@ export {
   usePostAuthSignUp,
 } from "./usePostAuthSignUp";
 export { postChatsMutationKey, postChats, usePostChats } from "./usePostChats";
+export {
+  postEvaluationKeyMutationKey,
+  postEvaluationKey,
+  usePostEvaluationKey,
+} from "./usePostEvaluationKey";

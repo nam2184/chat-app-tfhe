@@ -3,14 +3,14 @@
  * Do not edit manually.
  */
 
-import type { Message } from "./Message";
+import type { EncryptedMessage } from "./EncryptedMessage";
 import type { Meta } from "./Meta";
 
 export type GetMessages200 = {
   /**
    * @type array
    */
-  array: Message[];
+  array: EncryptedMessage[];
   /**
    * @type object
    */
