@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
-import {Message, User, api } from "@/utils";
+import { User, api } from "@/utils";
+import {  Message } from "@/lib/kubb"
 import { EncryptedMessage, postDecrypt, usePostDecrypt, usePostEncrypt, usePostMessage } from "@/lib/kubb-he";
 
 interface MessageProps {
@@ -34,25 +35,53 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     };
 
     socket.onmessage = (event) => {
-      const newMessage: EncryptedMessage = JSON.parse(event.data);
-
+      const newMessage: Message = JSON.parse(event.data);
+      
       (async () => {
-        const decryptedMessage = await decryptData(newMessage);
-
-        if (decryptedMessage?.type === "typing") {
+        if (newMessage?.type === "typing") {
           // Update typing status based on incoming event
-          setIsTyping(decryptedMessage.is_typing);
+          setIsTyping(newMessage.is_typing);
         } else {
+          const encryptedMessage: EncryptedMessage = {
+              chat_id: newMessage.chat_id!,
+              sender_id: newMessage.sender_id!,
+              sender_name: newMessage.sender_name!,
+              receiver_id: newMessage.receiver_id!,
+              content: newMessage.content!,
+              iv: (newMessage as any).iv!, // optional if present
+              image: newMessage.image,
+              image_to_classify: (newMessage as any).image_to_classify!,
+              type: newMessage.type!,
+              is_typing: newMessage.is_typing!,
+              timestamp: newMessage.timestamp!,
+              classification_result: newMessage.classification_result!,
+            };
+          
           // Avoid duplicate messages by checking if the new message already exists
-          setMessages((prev) => {
-            const isDuplicate = prev.some(
-              (msg) =>
-                msg.timestamp === decryptedMessage?.timestamp &&
-                msg.content === decryptedMessage?.content
-            );
-            return isDuplicate ? prev : [...prev, decryptedMessage!];
-          });
-          }
+          const decryptedMessage = await decryptData(encryptedMessage);
+          newMessage.image = decryptedMessage?.image
+          newMessage.content = decryptedMessage?.content
+          newMessage.classification_result = decryptedMessage?.classification_result
+
+          setMessages(prev => {
+            // Copy the previous array to avoid mutating state
+            const updated = prev.map(msg => {
+              if (msg.id === newMessage.id) {
+                // Same ID but different classification_result → replace
+                if (msg.classification_result == "" && msg.classification_result !== newMessage.classification_result) {
+                  return newMessage;
+                }
+                // Same ID and same classification → keep old
+                return msg;
+              }
+              return msg; // keep other messages
+            });
+
+            // If the message ID didn’t exist, append it
+            const exists = prev.some(msg => msg.id === newMessage.id);
+            return exists ? updated : [...prev, newMessage];
+          });          
+        }
       })();
     };
 
@@ -66,10 +95,6 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
 
   const sendMessage = async (content: string, image: string) => {
     if ((!content.trim() && image == "") || !socketRef.current) return;
-    
-    if (image == "") {
-      image = " "
-    } 
     const message: Message = {
       chat_id: chatID,
       type: "message",
@@ -84,13 +109,6 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     try {
       socketRef.current.send(JSON.stringify(message));
       console.log("Sending message:", JSON.stringify(message));
-
-      setMessages((prev) => {
-        const isDuplicate = prev.some(
-          (msg) => msg.timestamp === message.timestamp && msg.content === message.content
-        );
-        return isDuplicate ? prev : [...prev, message];
-      });
     } catch (error) {
       console.error("Error sending message through WebSocket:", error);
     }
@@ -99,9 +117,6 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
   const sendEncryptedMessage = async (content: string, image: string) => {
     if ((!content.trim() && image == "") || !socketRef.current) return;
     
-    if (image == "") {
-      image = " "
-    } 
     const message: EncryptedMessage = {
       chat_id: chatID,
       type: "message",
@@ -119,14 +134,7 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     try {
       socketRef.current.send(JSON.stringify(encryptedMessage));
       console.log("Sending message:", JSON.stringify(encryptedMessage));
-
-      setMessages((prev) => {
-        const isDuplicate = prev.some(
-          (msg) => msg.timestamp === message.timestamp && msg.content === message.content
-        );
-        return isDuplicate ? prev : [...prev, message];
-      });
-    } catch (error) {
+      } catch (error) {
       console.error("Error sending message through WebSocket:", error);
     }
   };

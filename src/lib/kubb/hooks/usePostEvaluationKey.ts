@@ -16,7 +16,8 @@ import type {
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 
-export const postEvaluationKeyMutationKey = () => [{ url: "/key" }] as const;
+export const postEvaluationKeyMutationKey = () =>
+  [{ url: "/evaluation-key" }] as const;
 
 export type PostEvaluationKeyMutationKey = ReturnType<
   typeof postEvaluationKeyMutationKey
@@ -24,7 +25,7 @@ export type PostEvaluationKeyMutationKey = ReturnType<
 
 /**
  * @summary Sende evaluation key to model service
- * {@link /key}
+ * {@link /evaluation-key}
  */
 export async function postEvaluationKey(
   data?: PostEvaluationKeyMutationRequest,
@@ -41,7 +42,7 @@ export async function postEvaluationKey(
     PostEvaluationKeyMutationRequest
   >({
     method: "POST",
-    url: `/key`,
+    url: `/evaluation-key`,
     data: requestData,
     ...requestConfig,
   });
@@ -50,7 +51,7 @@ export async function postEvaluationKey(
 
 /**
  * @summary Sende evaluation key to model service
- * {@link /key}
+ * {@link /evaluation-key}
  */
 export function usePostEvaluationKey<TContext>(
   options: {

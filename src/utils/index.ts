@@ -6,5 +6,5 @@ enum UserInputType {
 }
 
 export {  UserInputType }
-export type { Message, User} from './interfaces'
+export type {  User} from './interfaces'
 export {api} from './interfaces'

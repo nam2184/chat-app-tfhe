@@ -8,10 +8,6 @@ import type { PostEvaluationKeyBody } from "./PostEvaluationKeyBody";
 
 export type PostEvaluationKey = {
   /**
-   * @type integer | undefined, int32
-   */
-  chat_id?: number;
-  /**
    * @type string | undefined
    */
   file?: string;
@@ -19,6 +15,10 @@ export type PostEvaluationKey = {
    * @type string | undefined
    */
   id?: string;
+  /**
+   * @type integer | undefined, int32
+   */
+  user_id?: number;
 };
 
 /**

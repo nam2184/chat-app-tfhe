@@ -1,3 +1,5 @@
+export type { GetClientUserIdQueryKey } from "./hooks/useGetClientUserId";
+export type { GetClientUserIdSuspenseQueryKey } from "./hooks/useGetClientUserIdSuspense";
 export type { GetMessagesChatIdQueryKey } from "./hooks/useGetMessagesChatId";
 export type { GetMessagesChatIdSuspenseQueryKey } from "./hooks/useGetMessagesChatIdSuspense";
 export type { GetNormalKeysChatIdQueryKey } from "./hooks/useGetNormalKeysChatId";
@@ -12,6 +14,14 @@ export type { EncryptedMessage } from "./types/EncryptedMessage";
 export type { EncryptMessageBody } from "./types/EncryptMessageBody";
 export type { Error } from "./types/Error";
 export type { ErrorType } from "./types/ErrorType";
+export type {
+  GetClientUserIdPathParams,
+  GetClientUserId200,
+  GetClientUserId400,
+  GetClientUserIdError,
+  GetClientUserIdQueryResponse,
+  GetClientUserIdQuery,
+} from "./types/GetClientUserId";
 export type { GetMessages200 } from "./types/GetMessages200";
 export type {
   GetMessagesChatIdPathParams,
@@ -62,6 +72,18 @@ export type {
 } from "./types/PostMessage";
 export type { UNPROCESSABLEENTITY } from "./types/UNPROCESSABLEENTITY";
 export {
+  getClientUserIdQueryKey,
+  getClientUserId,
+  getClientUserIdQueryOptions,
+  useGetClientUserId,
+} from "./hooks/useGetClientUserId";
+export {
+  getClientUserIdSuspenseQueryKey,
+  getClientUserIdSuspense,
+  getClientUserIdSuspenseQueryOptions,
+  useGetClientUserIdSuspense,
+} from "./hooks/useGetClientUserIdSuspense";
+export {
   getMessagesChatIdQueryKey,
   getMessagesChatId,
   getMessagesChatIdQueryOptions,
@@ -107,6 +129,13 @@ export { encryptedMessageSchema } from "./zod/encryptedMessageSchema";
 export { encryptMessageBodySchema } from "./zod/encryptMessageBodySchema";
 export { errorSchema } from "./zod/errorSchema";
 export { errorTypeSchema } from "./zod/errorTypeSchema";
+export {
+  getClientUserIdPathParamsSchema,
+  getClientUserId200Schema,
+  getClientUserId400Schema,
+  getClientUserIdErrorSchema,
+  getClientUserIdQueryResponseSchema,
+} from "./zod/getClientUserIdSchema";
 export { getMessages200Schema } from "./zod/getMessages200Schema";
 export {
   getMessagesChatIdPathParamsSchema,

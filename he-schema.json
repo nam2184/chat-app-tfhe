@@ -1,6 +1,6 @@
 {
   "paths": {
-    "/client/{user_id}": {
+    "/client/{user_id}/{chat_id}": {
       "get": {
         "responses": {
           "400": {
@@ -23,12 +23,21 @@
         "tags": [
           "client"
         ],
-        "description": "Encrypt image using FHE."
+        "description": "Generate client configs for FHE."
       },
       "parameters": [
         {
           "in": "path",
           "name": "user_id",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        {
+          "in": "path",
+          "name": "chat_id",
           "required": true,
           "schema": {
             "type": "integer",

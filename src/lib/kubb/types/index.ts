@@ -8,6 +8,14 @@ export type {
   GetChatsQuery,
 } from "./GetChats";
 export type {
+  GetEvaluationKey,
+  GetEvaluationKey200,
+  GetEvaluationKey400,
+  GetEvaluationKeyError,
+  GetEvaluationKeyQueryResponse,
+  GetEvaluationKeyQuery,
+} from "./GetEvaluationKey";
+export type {
   GetMessages,
   GetMessagesPathParams,
   GetMessagesQueryParams,
@@ -51,6 +59,7 @@ export type {
   GetUsersQueryResponse,
   GetUsersQuery,
 } from "./GetUsers";
+export type { Message } from "./Message";
 export type {
   PostAuth,
   PostAuth200,

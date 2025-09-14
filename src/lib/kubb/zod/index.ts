@@ -7,6 +7,13 @@ export {
   getChatsQueryResponseSchema,
 } from "./getChatsSchema";
 export {
+  getEvaluationKeySchema,
+  getEvaluationKey200Schema,
+  getEvaluationKey400Schema,
+  getEvaluationKeyErrorSchema,
+  getEvaluationKeyQueryResponseSchema,
+} from "./getEvaluationKeySchema";
+export {
   getMessagesCountPathParamsSchema,
   getMessagesCountQueryParamsSchema,
   getMessagesCount200Schema,
@@ -45,6 +52,7 @@ export {
   getUsersErrorSchema,
   getUsersQueryResponseSchema,
 } from "./getUsersSchema";
+export { messageSchema } from "./messageSchema";
 export { postAuthResponseSchema } from "./postAuthResponseSchema";
 export {
   postAuthSchema,

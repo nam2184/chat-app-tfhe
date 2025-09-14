@@ -4,12 +4,12 @@ import {  User } from "@/utils/interfaces"
 import { OnlineUsers } from "./OnlineUsers";
 import { Conversation } from "./Conversation";
 import { useGetUserSuspense,useGetChatsSuspense, useGetUsersSuspense, usePostChats } from "@/lib/kubb";
-import { GetUserResponse } from "node_modules/@aws-amplify/auth/dist/esm/foundation/factories/serviceClients/cognitoIdentityProvider/types";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AddUsers } from "./AddUsers";
 import { useQueryClient } from "@tanstack/react-query";
+import { useGetClientUserId } from "@/lib/kubb-he";
 
 const postChatSchema = z.object({
   user1_id: z.number(),
@@ -21,6 +21,7 @@ const ChatComp: React.FC = () => {
     
     const queryClient = useQueryClient();
     const userGet = useGetUserSuspense()
+    const clientGet = useGetClientUserId(userGet.data.id!)
     const usersGet = useGetUsersSuspense()
     const chatGet = useGetChatsSuspense()
 

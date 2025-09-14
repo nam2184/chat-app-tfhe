@@ -1,5 +1,7 @@
 export type { GetChatsQueryKey } from "./hooks/useGetChats";
 export type { GetChatsSuspenseQueryKey } from "./hooks/useGetChatsSuspense";
+export type { GetEvaluationKeyQueryKey } from "./hooks/useGetEvaluationKey";
+export type { GetEvaluationKeySuspenseQueryKey } from "./hooks/useGetEvaluationKeySuspense";
 export type { GetMessagesQueryKey } from "./hooks/useGetMessages";
 export type { GetMessagesCountQueryKey } from "./hooks/useGetMessagesCount";
 export type { GetMessagesCountSuspenseQueryKey } from "./hooks/useGetMessagesCountSuspense";
@@ -23,6 +25,14 @@ export type {
   GetChatsQueryResponse,
   GetChatsQuery,
 } from "./types/GetChats";
+export type {
+  GetEvaluationKey,
+  GetEvaluationKey200,
+  GetEvaluationKey400,
+  GetEvaluationKeyError,
+  GetEvaluationKeyQueryResponse,
+  GetEvaluationKeyQuery,
+} from "./types/GetEvaluationKey";
 export type {
   GetMessages,
   GetMessagesPathParams,
@@ -67,6 +77,7 @@ export type {
   GetUsersQueryResponse,
   GetUsersQuery,
 } from "./types/GetUsers";
+export type { Message } from "./types/Message";
 export type {
   PostAuth,
   PostAuth200,
@@ -119,6 +130,18 @@ export {
   getChatsSuspenseQueryOptions,
   useGetChatsSuspense,
 } from "./hooks/useGetChatsSuspense";
+export {
+  getEvaluationKeyQueryKey,
+  getEvaluationKey,
+  getEvaluationKeyQueryOptions,
+  useGetEvaluationKey,
+} from "./hooks/useGetEvaluationKey";
+export {
+  getEvaluationKeySuspenseQueryKey,
+  getEvaluationKeySuspense,
+  getEvaluationKeySuspenseQueryOptions,
+  useGetEvaluationKeySuspense,
+} from "./hooks/useGetEvaluationKeySuspense";
 export {
   getMessagesQueryKey,
   getMessages,
@@ -208,6 +231,13 @@ export {
   getChatsQueryResponseSchema,
 } from "./zod/getChatsSchema";
 export {
+  getEvaluationKeySchema,
+  getEvaluationKey200Schema,
+  getEvaluationKey400Schema,
+  getEvaluationKeyErrorSchema,
+  getEvaluationKeyQueryResponseSchema,
+} from "./zod/getEvaluationKeySchema";
+export {
   getMessagesCountPathParamsSchema,
   getMessagesCountQueryParamsSchema,
   getMessagesCount200Schema,
@@ -246,6 +276,7 @@ export {
   getUsersErrorSchema,
   getUsersQueryResponseSchema,
 } from "./zod/getUsersSchema";
+export { messageSchema } from "./zod/messageSchema";
 export { postAuthResponseSchema } from "./zod/postAuthResponseSchema";
 export {
   postAuthSchema,

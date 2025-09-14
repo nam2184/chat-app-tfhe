@@ -1,5 +1,7 @@
 export type { GetChatsQueryKey } from "./useGetChats";
 export type { GetChatsSuspenseQueryKey } from "./useGetChatsSuspense";
+export type { GetEvaluationKeyQueryKey } from "./useGetEvaluationKey";
+export type { GetEvaluationKeySuspenseQueryKey } from "./useGetEvaluationKeySuspense";
 export type { GetMessagesQueryKey } from "./useGetMessages";
 export type { GetMessagesCountQueryKey } from "./useGetMessagesCount";
 export type { GetMessagesCountSuspenseQueryKey } from "./useGetMessagesCountSuspense";
@@ -26,6 +28,18 @@ export {
   getChatsSuspenseQueryOptions,
   useGetChatsSuspense,
 } from "./useGetChatsSuspense";
+export {
+  getEvaluationKeyQueryKey,
+  getEvaluationKey,
+  getEvaluationKeyQueryOptions,
+  useGetEvaluationKey,
+} from "./useGetEvaluationKey";
+export {
+  getEvaluationKeySuspenseQueryKey,
+  getEvaluationKeySuspense,
+  getEvaluationKeySuspenseQueryOptions,
+  useGetEvaluationKeySuspense,
+} from "./useGetEvaluationKeySuspense";
 export {
   getMessagesQueryKey,
   getMessages,

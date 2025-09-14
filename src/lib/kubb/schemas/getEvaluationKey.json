@@ -1,0 +1,9 @@
+{
+  "properties": {
+    "file": { "type": "string" },
+    "id": { "type": "string" },
+    "user_id": { "format": "int32", "type": "integer" }
+  },
+  "type": "object",
+  "x-readme-ref-name": "GetEvaluationKey"
+}

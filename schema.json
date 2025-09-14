@@ -97,6 +97,21 @@
         },
         "type": "object"
       },
+      "GetEvaluationKey": {
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "user_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "GetMessages": {
         "properties": {
           "array": {
@@ -259,6 +274,56 @@
         },
         "type": "object"
       },
+      "Message": {
+        "properties": {
+          "chat_id": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "classification_result": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "id": {
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "image": {
+            "type": "string"
+          },
+          "image_to_classify": {
+            "type": "string"
+          },
+          "is_typing": {
+            "type": "boolean"
+          },
+          "iv": {
+            "type": "string"
+          },
+          "receiver_id": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sender_id": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sender_name": {
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "PostAuth": {
         "properties": {
           "password": {
@@ -377,15 +442,15 @@
       },
       "PostEvaluationKey": {
         "properties": {
-          "chat_id": {
-            "format": "int32",
-            "type": "integer"
-          },
           "file": {
             "type": "string"
           },
           "id": {
             "type": "string"
+          },
+          "user_id": {
+            "format": "int32",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -617,7 +682,36 @@
         "summary": "Post chat"
       }
     },
-    "/key": {
+    "/evaluation-key": {
+      "get": {
+        "operationId": "GetEvaluationKey",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetEvaluationKey"
+                }
+              }
+            },
+            "description": "Get eval key success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Failure"
+          },
+          "default": {
+            "description": ""
+          }
+        },
+        "summary": "Get evaluation key from model service"
+      },
       "post": {
         "operationId": "PostEvaluationKey",
         "requestBody": {

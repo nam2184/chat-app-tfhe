@@ -1,3 +1,4 @@
+from datetime import datetime
 from db import DBService, MessageModel
 from flask_smorest import Api, Blueprint
 from flask_smorest.blueprint import MethodView
@@ -20,7 +21,7 @@ from PIL import Image
 import numpy as np
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
-from Crypto.Util.Padding import pad
+from Crypto.Util.Padding import pad, unpad
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from models import GetMessages200Schema, Message, ErrorType, ErrorTypeSchema, EncryptedMessageSchema, DecryptedMessageSchema, EncryptMessageBodySchema, DecryptMessageBodySchema, QueryParamsSchema
@@ -46,6 +47,16 @@ CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 blp = Blueprint("client", "client", url_prefix="/", description="Client Endpoints")
 
+def encode_json_safe(obj):
+    if isinstance(obj, dict):
+        return {k: encode_json_safe(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [encode_json_safe(v) for v in obj]
+    elif isinstance(obj, datetime):
+        return obj.isoformat()
+    else:
+        return obj
+
 # --- Utility: fix base64 padding ---
 def fix_base64_padding(b64_string: str) -> str:
     if b64_string.startswith("data:image"):
@@ -56,69 +67,103 @@ def fix_base64_padding(b64_string: str) -> str:
     return b64_string
 
 # --- Client config downloaders ---
-def generate_client_configs_local(network: Network, user_id: int): 
+def generate_client_configs_local(network: Network, chat_id: int): 
     client_dir_path = network.client_dir.name
-    client_zip_path = os.path.join(client_dir_path, "client.zip")
+    client_zip_path = os.path.join(client_dir_path, f"client{chat_id}.zip")
     
     if os.path.exists(client_zip_path):
-        print("Client directory already contains files. Skipping download.")
+        print("Client already exists. Skipping download.")
         model_client = FHEModelClient(network.client_dir.name, key_dir=network.client_dir.name)
         serialized_evaluation_keys = model_client.get_serialized_evaluation_keys()
         return
 
-    # --- Fetch FHE client configs ---
-    url = f"{network.local_server_endpoint}/client"
-    response = requests.get(url, stream=True)
+    # --- Fetch FHE client configs (JSON with base64 zip) ---
+    url = f"{network.local_server_endpoint}/client/{chat_id}"
+    response = requests.get(url)
     if response.status_code == 200:
-        with open(os.path.join(client_dir_path, "client.zip"), "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        print("Downloaded FHE client configs.")
+        data = response.json()
+        encoded_key_zip = data.get("keys")
+        encoded_client_zip = data.get("client_specs")
+        if not encoded_key_zip:
+            print("No 'keys' field in response.")
+            return
+        if not encoded_client_zip:
+            print("No 'client_specs' field in response.")
+            return
+        
+        # Decode base64 and save to client{chat_id}.zip
+        decoded_bytes = base64.b64decode(encoded_key_zip)
+        with open(client_zip_path, "wb") as f:
+            f.write(decoded_bytes)
+        print(f"Downloaded FHE client keys to {client_zip_path}.")
+        decoded_bytes = base64.b64decode(encoded_client_zip)
+        with open(client_zip_path, "wb") as f:
+            f.write(decoded_bytes)
+        print(f"Downloaded FHE client configs to {client_zip_path}.")
     else:
         print("Download failed:", response.status_code)
+        return
 
+    # --- Load client and post evaluation keys ---
     model_client = FHEModelClient(network.client_dir.name, key_dir=network.client_dir.name)
     serialized_evaluation_keys = model_client.get_serialized_evaluation_keys()
     
     url = f"{network.local_inference_endpoint}/key"
-    body = {"user_id" : user_id, "file" : serialized_evaluation_keys}
-    response = requests.post(url, body)
+    body = {"chat_id": chat_id, "file": serialized_evaluation_keys}
+    response = requests.post(url, json=body)
     if response.status_code == 200:
         print("Posted public evaluation key to server.")
     else:
-        print("Download failed:", response.status_code)
+        print("Upload failed:", response.status_code)
 
-def generate_client_configs(network: Network, user_id : int): 
+def generate_client_configs(network: Network, chat_id: int): 
     client_dir_path = network.client_dir.name
-    client_zip_path = os.path.join(client_dir_path, "client.zip")
+    client_zip_path = os.path.join(client_dir_path, f"client{chat_id}.zip")
     
     if os.path.exists(client_zip_path):
-        print("Client directory already contains files. Skipping download.")
+        print("Client already exists. Skipping download.")
         model_client = FHEModelClient(network.client_dir.name, key_dir=network.client_dir.name)
         serialized_evaluation_keys = model_client.get_serialized_evaluation_keys()
         return
 
-    # --- Fetch FHE client configs ---
-    url = f"{network.remote_server_endpoint}/client"
-    response = requests.get(url, stream=True)
+    # --- Fetch FHE client configs (JSON with base64 zip) ---
+    url = f"{network.remote_server_endpoint}/client/{chat_id}"
+    response = requests.get(url)
     if response.status_code == 200:
-        with open(os.path.join(client_dir_path, "client.zip"), "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        print("Downloaded FHE client configs.")
+        data = response.json()
+        encoded_key_zip = data.get("keys")
+        encoded_client_zip = data.get("client_specs")
+        if not encoded_key_zip:
+            print("No 'keys' field in response.")
+            return
+        if not encoded_client_zip:
+            print("No 'client_specs' field in response.")
+            return
+        
+        # Decode base64 and save to client{chat_id}.zip
+        decoded_bytes = base64.b64decode(encoded_key_zip)
+        with open(client_zip_path, "wb") as f:
+            f.write(decoded_bytes)
+        print(f"Downloaded FHE client keys to {client_zip_path}.")
+        decoded_bytes = base64.b64decode(encoded_client_zip)
+        with open(client_zip_path, "wb") as f:
+            f.write(decoded_bytes)
+        print(f"Downloaded FHE client configs to {client_zip_path}.")
     else:
         print("Download failed:", response.status_code)
+        return
 
+    # --- Load client and post evaluation keys ---
     model_client = FHEModelClient(network.client_dir.name, key_dir=network.client_dir.name)
     serialized_evaluation_keys = model_client.get_serialized_evaluation_keys()
     
-    url = f"{network.backend}/key"
-    body = {"user_id" : user_id, "file" : serialized_evaluation_keys}
-    response = requests.post(url, body)
+    url = f"{network.backend}/evaluation-key"
+    body = {"chat_id": chat_id, "file": serialized_evaluation_keys}
+    response = requests.post(url, json=body)
     if response.status_code == 200:
         print("Posted public evaluation key to server.")
     else:
-        print("Download failed:", response.status_code)
+        print("Upload failed:", response.status_code)
 
 def generate_normal_keys_local(chat_id, network: Network):
     # --- Paths ---
@@ -180,29 +225,55 @@ def generate_normal_keys(chat_id, network: Network):
 
 def send_inference_local(data, network: Network): 
     # --- Fetch FHE client configs ---
-    url = f"{network.local_inference_endpoint}/predict"
-    response = requests.post(url, data=data, stream=True)
+    post_encrypt_url = f"{network.local_inference_endpoint}/predict"
+    
+    try:
+        print("OUTGOING JSON:", json.dumps(data, indent=2))
+    except TypeError as e:
+        print("JSON serialization failed:", e)
+        for k, v in data.items():
+            print(k, type(v))
+    json_safe_data = encode_json_safe(data)
+    response = requests.post(post_encrypt_url,json=json_safe_data)
+    
     if response.status_code == 200:
-        print(response)
-    else:
-        print("Download failed:", response.status_code)
+        print(response.json()["classification_result"])
+    elif response.status_code == 204:
+        print("requires key but doesnt have it")
+        model_client = FHEModelClient(network.client_dir.name, key_dir=network.client_dir.name)
+        serialized_evaluation_keys = model_client.get_serialized_evaluation_keys()
+        encoded_eval_keys = base64.b64encode(serialized_evaluation_keys).decode("utf-8")
+        post_key_url = f"{network.local_inference_endpoint}/key"
+        body = {"chat_id" : data["chat_id"], "file" : encoded_eval_keys}
+
+        response = requests.post(post_key_url, json=body)
+        if response.status_code == 200:
+            print("Posted public evaluation key to server.")
+        else:
+            print("upload failed:", response.status_code)
+
+        response = requests.post(post_encrypt_url,json=json_safe_data)
+        if response.status_code == 200:
+            print(response.json()["classification_result"])
+        else:
+            print("Download failed:", response.status_code)
+    else :
+        print("Download failed:", response.json())
+
     
 # --- Encrypt endpoint ---
-@cross_origin(supports_credentials=True)
-@blp.route("/client/<int:user_id>")
+@blp.route("/client/<int:chat_id>")
 class Client(MethodView):
-    @blp.doc(description="Encrypt image using FHE.")
+    @blp.doc(description="Generate client configs for FHE.")
     @blp.response(200)
     @blp.alt_response(status_code=400, schema=ErrorTypeSchema)
-    def get(self, user_id):
+    def get(self,  chat_id):
+        #token = request.headers.get("Authorization")
         try:
-            generate_client_configs_local(network, user_id)
-            #generate_client_configs(network, user_id)
+            generate_client_configs_local(network, chat_id)
             return None, 200
         except Exception as e:
-            error = {"section": "messages", "message": str(e)}
-            return error, 400
-
+            return {"section": "messages", "message": str(e)}, 400
 
 @cross_origin(supports_credentials=True)
 @blp.route("/normal_keys/<int:chat_id>")
@@ -234,30 +305,25 @@ class Encrypt(MethodView):
 
             if not message.get("content") and not message.get("image"):
                 raise ValueError("Either 'content' or 'image' must be provided.")
-            normal_keys_dir = os.path.join(network.client_dir.name, "normal_keys")
+            normal_keys_dir = os.path.join(network.client_dir.name)
 
             # load AES key (example: saved as aes_key.bin)
-            aes_key_path = os.path.join(normal_keys_dir, "aes_key.bin")
+            chat_id = message.get("chat_id")
+            aes_key_path = os.path.join(normal_keys_dir, f"aes_key{chat_id}.bin")
+            
             if not os.path.exists(aes_key_path):
+                print("No aes key found")
                 raise FileNotFoundError("AES key not found in normal_keys directory.")
             with open(aes_key_path, "rb") as f:
                 aes_key = f.read()
-
+            
+            print("starting encryption")
             cipher_aes = AES.new(aes_key, AES.MODE_CBC)
-            
-            if message.get("image"):
-                ct_bytes_image = cipher_aes.encrypt(pad(image_data, AES.block_size))
-                message["image"] = base64.b64encode(ct_bytes_image).decode("utf-8"),
-            
-            if message.get("content") :
-                ct_bytes_content = cipher_aes.encrypt(pad(message["content"], AES.block_size))
-                message["content"] = base64.b64encode(ct_bytes_content).decode("utf-8"),
-
-            message["iv"] = base64.b64encode(cipher_aes.iv).decode("utf-8"),
-
-            if message.get("image"):
-                print("Decoding image")
+            if message.get("image") != "":
                 image_data = base64.b64decode(fix_base64_padding(message["image"]))
+                ct_bytes_image = cipher_aes.encrypt(pad(image_data, AES.block_size))
+                message["image"] = base64.b64encode(ct_bytes_image).decode("utf-8")
+                print("encrypted image normally")
                 image = Image.open(BytesIO(image_data))
 
                 memory_before = util.get_memory_usage()
@@ -278,8 +344,20 @@ class Encrypt(MethodView):
 
                 memory_after = util.get_memory_usage()
                 memory = (memory_after - memory_before) / (1024 * 1024)
-                
-                send_inference_local(message, network)
+                print("sending to local inference server") 
+                message["iv"] = base64.b64encode(cipher_aes.iv).decode("utf-8")
+                #send_inference_local(message, network)
+            else:
+                print("no image")
+
+            if message.get("content") != "":
+                message["iv"] = base64.b64encode(cipher_aes.iv).decode("utf-8")
+                print("encrypting content :" + message["content"])
+                ct_bytes_content = cipher_aes.encrypt(pad(message["content"].encode(), AES.block_size))
+                print("encrypted content")
+                message["content"] = base64.b64encode(ct_bytes_content).decode("utf-8")
+                print("encoded content")
+
             return message
 
         except Exception as e:
@@ -296,23 +374,20 @@ class Decrypt(MethodView):
     @blp.alt_response(status_code=400,schema=ErrorTypeSchema)
     def post(self, data):
         try:
-
             message = data
-
-            serialized_class_result = base64.b64decode(message["classification_result"])
-            
-            memory_before = util.get_memory_usage()
-
-            model_client = FHEModelClient(network.client_dir.name, key_dir=network.client_dir.name)
-            result = model_client.deserialize_decrypt_dequantize(serialized_class_result)
-
-            message["classification_result"] = result
-
-            memory_after = util.get_memory_usage()
-            memory = (memory_after - memory_before) / (1024 * 1024)
+            class_result_encoded = message.get("classification_result")
+            if class_result_encoded and class_result_encoded != "":
+                serialized_class_result = base64.b64decode(class_result_encoded)
+                memory_before = util.get_memory_usage()
+                model_client = FHEModelClient(network.client_dir.name, key_dir=network.client_dir.name)
+                result = model_client.deserialize_decrypt_dequantize(serialized_class_result)
+                message["classification_result"] = result
+                memory_after = util.get_memory_usage()
+                memory = (memory_after - memory_before) / (1024 * 1024)
+                print(memory)    
             
             # --- Normal AES-CBC decryption (image and content) ---
-            normal_keys_dir = os.path.join(network.client_dir.name, "normal_keys")
+            normal_keys_dir = os.path.join(network.client_dir.name, f"normal_keys{message.get('chat_id')}")
             aes_key_path = os.path.join(normal_keys_dir, "aes_key.bin")
             if not os.path.exists(aes_key_path):
                 raise FileNotFoundError("AES key not found in normal_keys directory.")
@@ -333,10 +408,10 @@ class Decrypt(MethodView):
             ct_content_b64 = message.get("content")
             if ct_content_b64 and iv_b64:
                 ct_content_bytes = base64.b64decode(ct_content_b64)
+                iv = base64.b64decode(iv_b64)
                 cipher = AES.new(aes_key, AES.MODE_CBC, iv)
                 decrypted_content_bytes = unpad(cipher.decrypt(ct_content_bytes), AES.block_size)
                 message["content"] = decrypted_content_bytes.decode("utf-8")
-            
             return message
 
         except Exception as e:
@@ -455,4 +530,4 @@ if __name__ == '__main__':
     util.setup_logging(log_file_path, 'werkzeug')
     p1 = Process(target=run_flask_app, args=(app, 5002))
     p1.start()
-
+    #model_client = FHEModelClient(network.client_dir.name, key_dir=network.client_dir.name)

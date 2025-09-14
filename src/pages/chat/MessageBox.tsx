@@ -1,6 +1,6 @@
 import React from "react"
-import { Message } from "@/utils"
 import dayjs from 'dayjs';
+import { Message } from "@/lib/kubb";
 
 interface MessageProp {
     message: Message
@@ -9,6 +9,12 @@ interface MessageProp {
 
 const MessageBox: React.FC<MessageProp> = (props) => {
     const { message, username } = props;
+
+    // Decide blur logic
+    const shouldBlur =
+        !message.classification_result ||
+        message.classification_result === "" ||
+        message.classification_result === "true";
 
     return (
         <div className="flex flex-col bg-gray-100 p-3 rounded-lg shadow-md">
@@ -21,14 +27,18 @@ const MessageBox: React.FC<MessageProp> = (props) => {
 
             <div className="text-gray-800 text-sm">
                 {message.content && (
-                    <p className="mb-2 whitespace-pre-wrap break-words">{message.content}</p>
+                    <p className="mb-2 whitespace-pre-wrap break-words">
+                        {message.content}
+                    </p>
                 )}
 
                 {message.image && (
                     <img
                         src={message.image}
                         alt="Sent"
-                        className="rounded-lg object-contain max-w-full max-h-64"
+                        className={`rounded-lg object-contain max-w-full max-h-64 ${
+                            shouldBlur ? "blur-sm" : ""
+                        }`}
                     />
                 )}
             </div>

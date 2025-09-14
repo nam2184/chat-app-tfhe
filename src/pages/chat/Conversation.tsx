@@ -2,10 +2,9 @@ import { User } from "@/utils/interfaces";
 import React, { useState, useEffect, useRef } from "react";
 import { UserInput } from "./UserInput";
 import styles from './styles/chat.module.css';
-import { Message } from "@/utils";
 import { useMessagesAPI } from "@/hooks";
 import { MessageBox } from "./MessageBox";
-import { useGetMessages } from "@/lib/kubb";
+import { Message, useGetMessages } from "@/lib/kubb";
 import { EncryptedMessage, getNormalKeysChatIdSuspense, useGetMessagesChatId, useGetNormalKeysChatId, useGetNormalKeysChatIdSuspense } from "@/lib/kubb-he";
 import path from "path";
 import fs from 'fs';
@@ -25,9 +24,7 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
   const [loading, setLoading] = useState(false);
   const [encrypted, setEncrypted] = useState(false);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
- 
   const getNormalKeys = useGetNormalKeysChatId(chatID);
-  
   const checkFilesAndRequest = (chatID : number) => {
         try {
           useGetNormalKeysChatId(chatID).refetch();
@@ -81,14 +78,37 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
     try {
       const api = getMessagesQuery;
       const { data } = await api.refetch({});
-
       const newMessages = data?.array!.reverse() || [];
 
       setMessages(prev => {
-        const existing = new Set(prev.map(m => m?.timestamp! + m?.content!));
-        const filtered = newMessages.filter(m => !existing.has(m?.timestamp! + m?.content!));
-        return [...filtered, ...prev];
+          // Map existing messages by ID for easy lookup
+        const messageMap = new Map<number | string, Message>();
+          prev.forEach(m => {
+            if (m.id !== undefined) messageMap.set(m.id!, m);
+          });
+
+          newMessages.forEach(m => {
+            if (!m.id) return; // skip messages without ID
+            const existing = messageMap.get(m.id);
+
+            if (!existing) {
+              // New message — add it
+              messageMap.set(m?.id, m!);
+            } else if (existing.classification_result !== m.classification_result) {
+              // Same ID, classification changed — replace
+              messageMap.set(m.id, m);
+            }
+            // else same ID, same classification — keep old
+          });
+
+          // Convert map back to array and sort by timestamp
+          return Array.from(messageMap.values()).sort((a, b) => {
+            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return timeA - timeB;
+          });
       });
+
       console.log(messages)
       setShouldScrollToBottom(false);
       setTotal(data?.meta?.total ?? 0);
@@ -131,25 +151,8 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
     console.log("Reached here")
     if (!text.trim() && !image) return; 
 
-    
-    const now = Date.now();
-
-    const optimisticMessage: EncryptedMessage = {
-      content: text.trim(),
-      image,
-      chat_id: chatID,
-      sender_id: sender?.id!,
-      sender_name: sender?.username!,
-      receiver_id: reciever.id!,
-      type: image ? "image" : "text",
-      is_typing: false,
-      timestamp: now.toString(),
-    };
-
     try {
-      setMessages((prev) => [...prev, optimisticMessage]);
-
-      await sendEncryptedMessage(text.trim(), image);
+      await sendEncryptedMessage(text.trim(), image.trim());
 
       setText('');
       setImage('');
