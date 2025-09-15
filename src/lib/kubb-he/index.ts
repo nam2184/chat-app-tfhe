@@ -1,5 +1,5 @@
-export type { GetClientUserIdQueryKey } from "./hooks/useGetClientUserId";
-export type { GetClientUserIdSuspenseQueryKey } from "./hooks/useGetClientUserIdSuspense";
+export type { GetClientChatIdQueryKey } from "./hooks/useGetClientChatId";
+export type { GetClientChatIdSuspenseQueryKey } from "./hooks/useGetClientChatIdSuspense";
 export type { GetMessagesChatIdQueryKey } from "./hooks/useGetMessagesChatId";
 export type { GetMessagesChatIdSuspenseQueryKey } from "./hooks/useGetMessagesChatIdSuspense";
 export type { GetNormalKeysChatIdQueryKey } from "./hooks/useGetNormalKeysChatId";
@@ -15,13 +15,13 @@ export type { EncryptMessageBody } from "./types/EncryptMessageBody";
 export type { Error } from "./types/Error";
 export type { ErrorType } from "./types/ErrorType";
 export type {
-  GetClientUserIdPathParams,
-  GetClientUserId200,
-  GetClientUserId400,
-  GetClientUserIdError,
-  GetClientUserIdQueryResponse,
-  GetClientUserIdQuery,
-} from "./types/GetClientUserId";
+  GetClientChatIdPathParams,
+  GetClientChatId200,
+  GetClientChatId400,
+  GetClientChatIdError,
+  GetClientChatIdQueryResponse,
+  GetClientChatIdQuery,
+} from "./types/GetClientChatId";
 export type { GetMessages200 } from "./types/GetMessages200";
 export type {
   GetMessagesChatIdPathParams,
@@ -72,17 +72,17 @@ export type {
 } from "./types/PostMessage";
 export type { UNPROCESSABLEENTITY } from "./types/UNPROCESSABLEENTITY";
 export {
-  getClientUserIdQueryKey,
-  getClientUserId,
-  getClientUserIdQueryOptions,
-  useGetClientUserId,
-} from "./hooks/useGetClientUserId";
+  getClientChatIdQueryKey,
+  getClientChatId,
+  getClientChatIdQueryOptions,
+  useGetClientChatId,
+} from "./hooks/useGetClientChatId";
 export {
-  getClientUserIdSuspenseQueryKey,
-  getClientUserIdSuspense,
-  getClientUserIdSuspenseQueryOptions,
-  useGetClientUserIdSuspense,
-} from "./hooks/useGetClientUserIdSuspense";
+  getClientChatIdSuspenseQueryKey,
+  getClientChatIdSuspense,
+  getClientChatIdSuspenseQueryOptions,
+  useGetClientChatIdSuspense,
+} from "./hooks/useGetClientChatIdSuspense";
 export {
   getMessagesChatIdQueryKey,
   getMessagesChatId,
@@ -130,12 +130,12 @@ export { encryptMessageBodySchema } from "./zod/encryptMessageBodySchema";
 export { errorSchema } from "./zod/errorSchema";
 export { errorTypeSchema } from "./zod/errorTypeSchema";
 export {
-  getClientUserIdPathParamsSchema,
-  getClientUserId200Schema,
-  getClientUserId400Schema,
-  getClientUserIdErrorSchema,
-  getClientUserIdQueryResponseSchema,
-} from "./zod/getClientUserIdSchema";
+  getClientChatIdPathParamsSchema,
+  getClientChatId200Schema,
+  getClientChatId400Schema,
+  getClientChatIdErrorSchema,
+  getClientChatIdQueryResponseSchema,
+} from "./zod/getClientChatIdSchema";
 export { getMessages200Schema } from "./zod/getMessages200Schema";
 export {
   getMessagesChatIdPathParamsSchema,

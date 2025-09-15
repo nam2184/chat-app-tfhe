@@ -5,7 +5,7 @@ import styles from './styles/chat.module.css';
 import { useMessagesAPI } from "@/hooks";
 import { MessageBox } from "./MessageBox";
 import { Message, useGetMessages } from "@/lib/kubb";
-import { EncryptedMessage, getNormalKeysChatIdSuspense, useGetMessagesChatId, useGetNormalKeysChatId, useGetNormalKeysChatIdSuspense } from "@/lib/kubb-he";
+import { EncryptedMessage, getNormalKeysChatIdSuspense, useGetClientChatId, useGetMessagesChatId, useGetNormalKeysChatId, useGetNormalKeysChatIdSuspense } from "@/lib/kubb-he";
 import path from "path";
 import fs from 'fs';
 
@@ -25,9 +25,12 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
   const [encrypted, setEncrypted] = useState(false);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
   const getNormalKeys = useGetNormalKeysChatId(chatID);
+  const getClientAndHEKeys = useGetClientChatId(chatID);
+  
   const checkFilesAndRequest = (chatID : number) => {
         try {
           useGetNormalKeysChatId(chatID).refetch();
+          useGetClientChatId(chatID).refetch();
           console.log(getNormalKeys)
         } catch (error) {
           console.error("Error sending request:", error);

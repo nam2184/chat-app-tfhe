@@ -9,7 +9,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AddUsers } from "./AddUsers";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGetClientUserId } from "@/lib/kubb-he";
 
 const postChatSchema = z.object({
   user1_id: z.number(),
@@ -21,7 +20,6 @@ const ChatComp: React.FC = () => {
     
     const queryClient = useQueryClient();
     const userGet = useGetUserSuspense()
-    const clientGet = useGetClientUserId(userGet.data.id!)
     const usersGet = useGetUsersSuspense()
     const chatGet = useGetChatsSuspense()
 

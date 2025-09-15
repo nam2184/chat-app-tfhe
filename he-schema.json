@@ -1,6 +1,6 @@
 {
   "paths": {
-    "/client/{user_id}/{chat_id}": {
+    "/client/{chat_id}": {
       "get": {
         "responses": {
           "400": {
@@ -26,15 +26,6 @@
         "description": "Generate client configs for FHE."
       },
       "parameters": [
-        {
-          "in": "path",
-          "name": "user_id",
-          "required": true,
-          "schema": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
         {
           "in": "path",
           "name": "chat_id",
@@ -174,125 +165,6 @@
         ],
         "description": "Decrypt encrypted image using FHE."
       }
-    },
-    "/message": {
-      "post": {
-        "responses": {
-          "422": {
-            "$ref": "#/components/responses/UNPROCESSABLE_ENTITY"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorType"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DecryptedMessage"
-                }
-              }
-            }
-          },
-          "default": {
-            "$ref": "#/components/responses/DEFAULT_ERROR"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EncryptMessageBody"
-              }
-            }
-          }
-        },
-        "tags": [
-          "client"
-        ],
-        "description": "Insert a message into the database."
-      }
-    },
-    "/messages/{chat_id}": {
-      "get": {
-        "parameters": [
-          {
-            "in": "query",
-            "name": "skip",
-            "schema": {
-              "type": "integer"
-            },
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "order_by",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "sort_by",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          }
-        ],
-        "responses": {
-          "422": {
-            "$ref": "#/components/responses/UNPROCESSABLE_ENTITY"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorType"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GetMessages200"
-                }
-              }
-            }
-          },
-          "default": {
-            "$ref": "#/components/responses/DEFAULT_ERROR"
-          }
-        },
-        "tags": [
-          "client"
-        ],
-        "description": "Get messages by chat ID with optional sorting and pagination."
-      },
-      "parameters": [
-        {
-          "in": "path",
-          "name": "chat_id",
-          "required": true,
-          "schema": {
-            "type": "integer",
-            "minimum": 0
-          }
-        }
-      ]
     }
   },
   "info": {
@@ -566,32 +438,6 @@
           "sender_name",
           "timestamp",
           "type"
-        ]
-      },
-      "Meta": {
-        "type": "object",
-        "properties": {
-          "total": {
-            "type": "integer"
-          }
-        }
-      },
-      "GetMessages200": {
-        "type": "object",
-        "properties": {
-          "array": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EncryptedMessage"
-            }
-          },
-          "meta": {
-            "$ref": "#/components/schemas/Meta"
-          }
-        },
-        "required": [
-          "array",
-          "meta"
         ]
       }
     },

@@ -1,5 +1,5 @@
-export type { GetClientUserIdQueryKey } from "./useGetClientUserId";
-export type { GetClientUserIdSuspenseQueryKey } from "./useGetClientUserIdSuspense";
+export type { GetClientChatIdQueryKey } from "./useGetClientChatId";
+export type { GetClientChatIdSuspenseQueryKey } from "./useGetClientChatIdSuspense";
 export type { GetMessagesChatIdQueryKey } from "./useGetMessagesChatId";
 export type { GetMessagesChatIdSuspenseQueryKey } from "./useGetMessagesChatIdSuspense";
 export type { GetNormalKeysChatIdQueryKey } from "./useGetNormalKeysChatId";
@@ -8,17 +8,17 @@ export type { PostDecryptMutationKey } from "./usePostDecrypt";
 export type { PostEncryptMutationKey } from "./usePostEncrypt";
 export type { PostMessageMutationKey } from "./usePostMessage";
 export {
-  getClientUserIdQueryKey,
-  getClientUserId,
-  getClientUserIdQueryOptions,
-  useGetClientUserId,
-} from "./useGetClientUserId";
+  getClientChatIdQueryKey,
+  getClientChatId,
+  getClientChatIdQueryOptions,
+  useGetClientChatId,
+} from "./useGetClientChatId";
 export {
-  getClientUserIdSuspenseQueryKey,
-  getClientUserIdSuspense,
-  getClientUserIdSuspenseQueryOptions,
-  useGetClientUserIdSuspense,
-} from "./useGetClientUserIdSuspense";
+  getClientChatIdSuspenseQueryKey,
+  getClientChatIdSuspense,
+  getClientChatIdSuspenseQueryOptions,
+  useGetClientChatIdSuspense,
+} from "./useGetClientChatIdSuspense";
 export {
   getMessagesChatIdQueryKey,
   getMessagesChatId,

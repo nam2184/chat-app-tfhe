@@ -70,9 +70,7 @@ class DecryptMessageBodySchema(ma.Schema):
     type = ma.fields.Str(required=True)
     is_typing = ma.fields.Bool(required=False)
     timestamp = ma.fields.DateTime(required=True)
-    classification_result = ma.fields.Str(required=True)
-
-
+    classification_result = ma.fields.Str(required=False)
 
 class ErrorTypeSchema(ma.Schema):
     section = ma.fields.Str(required=True)

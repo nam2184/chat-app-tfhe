@@ -1,48 +1,38 @@
 from sqlmodel import SQLModel, Field, create_engine, Session, select
-from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 
-
-class MessageModel(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    chat_id: int
-    sender_id: int
-    sender_name: str
-    receiver_id: int
-    content: Optional[str] = None
-    image: Optional[str] = None
-    type: str
-    is_typing: bool = False
-    timestamp: datetime
-    classification_result: Optional[bool] = None
-
+class ClientHEModel(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    chat_id: int = Field(index=True, unique=True)
+    dir_number: int
 
 class DBService:
-    def __init__(self, db_path: str = "sqlite:///messages.db"):
+    def __init__(self, db_path: str = "sqlite:///clients.db"):
         self.engine = create_engine(db_path, echo=False)
         SQLModel.metadata.create_all(self.engine)
 
-    def insert_message(self, message: MessageModel) -> MessageModel:
+    def insert_client(self, client: ClientHEModel) -> ClientHEModel:
         with Session(self.engine) as session:
-            session.add(message)
+            session.add(client)
             session.commit()
-            session.refresh(message)
-            return message
+            session.refresh(client)
+            return client
 
-    def get_messages_by_chat_id(self, chat_id: int) :
+    def get_client_by_chat_id(self, chat_id: int) -> Optional[ClientHEModel]:
         with Session(self.engine) as session:
-            statement = select(MessageModel).where(MessageModel.chat_id == chat_id)
-            return session.exec(statement).all()
+            statement = select(ClientHEModel).where(ClientHEModel.chat_id == chat_id)
+            return session.exec(statement).first()
 
-    def get_all_messages(self):
+    def get_all_clients(self) -> list[ClientHEModel]:
         with Session(self.engine) as session:
-            return session.exec(select(MessageModel)).all()
+            return session.exec(select(ClientHEModel)).all()
 
-    def delete_message_by_id(self, message_id: int) -> bool:
+    def delete_client_by_chat_id(self, chat_id: int) -> bool:
         with Session(self.engine) as session:
-            message = session.get(MessageModel, message_id)
-            if message:
-                session.delete(message)
+            client = session.exec(select(ClientHEModel).where(ClientHEModel.chat_id == chat_id)).first()
+            if client:
+                session.delete(client)
                 session.commit()
                 return True
             return False
+

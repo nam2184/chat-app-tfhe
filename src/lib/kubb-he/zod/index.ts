@@ -6,12 +6,12 @@ export { encryptMessageBodySchema } from "./encryptMessageBodySchema";
 export { errorSchema } from "./errorSchema";
 export { errorTypeSchema } from "./errorTypeSchema";
 export {
-  getClientUserIdPathParamsSchema,
-  getClientUserId200Schema,
-  getClientUserId400Schema,
-  getClientUserIdErrorSchema,
-  getClientUserIdQueryResponseSchema,
-} from "./getClientUserIdSchema";
+  getClientChatIdPathParamsSchema,
+  getClientChatId200Schema,
+  getClientChatId400Schema,
+  getClientChatIdErrorSchema,
+  getClientChatIdQueryResponseSchema,
+} from "./getClientChatIdSchema";
 export { getMessages200Schema } from "./getMessages200Schema";
 export {
   getMessagesChatIdPathParamsSchema,

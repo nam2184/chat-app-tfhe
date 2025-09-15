@@ -6,13 +6,13 @@ export type { EncryptMessageBody } from "./EncryptMessageBody";
 export type { Error } from "./Error";
 export type { ErrorType } from "./ErrorType";
 export type {
-  GetClientUserIdPathParams,
-  GetClientUserId200,
-  GetClientUserId400,
-  GetClientUserIdError,
-  GetClientUserIdQueryResponse,
-  GetClientUserIdQuery,
-} from "./GetClientUserId";
+  GetClientChatIdPathParams,
+  GetClientChatId200,
+  GetClientChatId400,
+  GetClientChatIdError,
+  GetClientChatIdQueryResponse,
+  GetClientChatIdQuery,
+} from "./GetClientChatId";
 export type { GetMessages200 } from "./GetMessages200";
 export type {
   GetMessagesChatIdPathParams,
