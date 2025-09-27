@@ -10,5 +10,6 @@
       "additionalProperties": {}
     }
   },
+  "additionalProperties": false,
   "x-readme-ref-name": "Error"
 }

@@ -8,9 +8,9 @@ import { postEvaluationKeyBodySchema } from "./postEvaluationKeyBodySchema";
 import { z } from "zod";
 
 export const postEvaluationKeySchema = z.object({
+  chat_id: z.number().int().optional(),
   file: z.string().optional(),
   id: z.string().optional(),
-  user_id: z.number().int().optional(),
 });
 
 /**

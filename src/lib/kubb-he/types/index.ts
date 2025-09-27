@@ -13,17 +13,6 @@ export type {
   GetClientChatIdQueryResponse,
   GetClientChatIdQuery,
 } from "./GetClientChatId";
-export type { GetMessages200 } from "./GetMessages200";
-export type {
-  GetMessagesChatIdPathParams,
-  GetMessagesChatIdQueryParams,
-  GetMessagesChatId200,
-  GetMessagesChatId400,
-  GetMessagesChatId422,
-  GetMessagesChatIdError,
-  GetMessagesChatIdQueryResponse,
-  GetMessagesChatIdQuery,
-} from "./GetMessagesChatId";
 export type {
   GetNormalKeysChatIdPathParams,
   GetNormalKeysChatId200,
@@ -32,7 +21,6 @@ export type {
   GetNormalKeysChatIdQueryResponse,
   GetNormalKeysChatIdQuery,
 } from "./GetNormalKeysChatId";
-export type { Meta } from "./Meta";
 export type { PaginationMetadata } from "./PaginationMetadata";
 export type {
   PostDecrypt200,
@@ -52,13 +40,4 @@ export type {
   PostEncryptMutationResponse,
   PostEncryptMutation,
 } from "./PostEncrypt";
-export type {
-  PostMessage200,
-  PostMessage400,
-  PostMessage422,
-  PostMessageError,
-  PostMessageMutationRequest,
-  PostMessageMutationResponse,
-  PostMessageMutation,
-} from "./PostMessage";
 export type { UNPROCESSABLEENTITY } from "./UNPROCESSABLEENTITY";

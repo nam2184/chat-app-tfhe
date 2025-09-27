@@ -12,9 +12,18 @@ const MessageBox: React.FC<MessageProp> = (props) => {
 
     // Decide blur logic
     const shouldBlur =
-        !message.classification_result ||
-        message.classification_result === "" ||
+        message.classification_result === "Pending" ||
         message.classification_result === "true";
+
+    // Ensure correct image source
+    let imageSrc: string | undefined;
+    if (message.image) {
+        if (message.image.startsWith("data:image")) {
+            imageSrc = message.image; // already prefixed
+        } else {
+            imageSrc = `data:image/png;base64,${message.image}`; // fallback default
+        }
+    }
 
     return (
         <div className="flex flex-col bg-gray-100 p-3 rounded-lg shadow-md">
@@ -32,9 +41,9 @@ const MessageBox: React.FC<MessageProp> = (props) => {
                     </p>
                 )}
 
-                {message.image && (
+                {imageSrc && (
                     <img
-                        src={message.image}
+                        src={imageSrc}
                         alt="Sent"
                         className={`rounded-lg object-contain max-w-full max-h-64 ${
                             shouldBlur ? "blur-sm" : ""

@@ -3,6 +3,8 @@ import { Route, Routes } from 'react-router-dom'
 const ChatComp = React.lazy(() => import('./pages').then(({ ChatComp }) => ({ default: ChatComp })))
 const SignIn = React.lazy(() => import('./pages').then(({ SignIn }) => ({ default: SignIn })))
 const SignUp = React.lazy(() => import('./pages').then(({ SignUp }) => ({ default: SignUp })))
+const QueueView = React.lazy(() => import('./pages').then(({ QueueView }) => ({ default: QueueView })))
+const ClientEncryptView = React.lazy(() => import('./pages').then(({ ClientEncryptView }) => ({ default: ClientEncryptView })))
 
 import { Helmet } from 'react-helmet';
 
@@ -30,6 +32,8 @@ const App: React.FC = () => {
         <Route path="/" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/chat" element={<ChatComp />} />
+        <Route path="/admin/queue" element={<QueueView />} />
+        <Route path="/admin/encrypt" element={<ClientEncryptView />} />
       </Routes>
     </>
   );

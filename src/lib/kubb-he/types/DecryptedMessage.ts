@@ -7,6 +7,10 @@ export type DecryptedMessage = {
   /**
    * @type integer
    */
+  id: number;
+  /**
+   * @type integer
+   */
   chat_id: number;
   /**
    * @type integer
@@ -45,7 +49,7 @@ export type DecryptedMessage = {
    */
   timestamp: string;
   /**
-   * @type boolean
+   * @type string
    */
-  classification_result: boolean;
+  classification_result: string;
 };

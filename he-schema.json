@@ -200,7 +200,8 @@
             "description": "Errors",
             "additionalProperties": {}
           }
-        }
+        },
+        "additionalProperties": false
       },
       "PaginationMetadata": {
         "type": "object",
@@ -226,7 +227,8 @@
           "next_page": {
             "type": "integer"
           }
-        }
+        },
+        "additionalProperties": false
       },
       "ErrorType": {
         "type": "object",
@@ -241,7 +243,8 @@
         "required": [
           "message",
           "section"
-        ]
+        ],
+        "additionalProperties": false
       },
       "EncryptMessageBody": {
         "type": "object",
@@ -286,7 +289,8 @@
           "sender_name",
           "timestamp",
           "type"
-        ]
+        ],
+        "additionalProperties": false
       },
       "EncryptedMessage": {
         "type": "object",
@@ -337,11 +341,15 @@
           "sender_name",
           "timestamp",
           "type"
-        ]
+        ],
+        "additionalProperties": false
       },
       "DecryptMessageBody": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer"
+          },
           "chat_id": {
             "type": "integer"
           },
@@ -382,18 +390,22 @@
         },
         "required": [
           "chat_id",
-          "classification_result",
           "content",
+          "id",
           "receiver_id",
           "sender_id",
           "sender_name",
           "timestamp",
           "type"
-        ]
+        ],
+        "additionalProperties": false
       },
       "DecryptedMessage": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "integer"
+          },
           "chat_id": {
             "type": "integer"
           },
@@ -426,19 +438,21 @@
             "format": "date-time"
           },
           "classification_result": {
-            "type": "boolean"
+            "type": "string"
           }
         },
         "required": [
           "chat_id",
           "classification_result",
           "content",
+          "id",
           "receiver_id",
           "sender_id",
           "sender_name",
           "timestamp",
           "type"
-        ]
+        ],
+        "additionalProperties": false
       }
     },
     "responses": {

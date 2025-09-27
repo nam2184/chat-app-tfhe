@@ -52,6 +52,7 @@ export {
   getUsersErrorSchema,
   getUsersQueryResponseSchema,
 } from "./getUsersSchema";
+export { inferenceEventSchema } from "./inferenceEventSchema";
 export { messageSchema } from "./messageSchema";
 export { postAuthResponseSchema } from "./postAuthResponseSchema";
 export {

@@ -9,5 +9,6 @@
     "previous_page": { "type": "integer" },
     "next_page": { "type": "integer" }
   },
+  "additionalProperties": false,
   "x-readme-ref-name": "PaginationMetadata"
 }

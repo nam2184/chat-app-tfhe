@@ -5,7 +5,7 @@ import styles from './styles/chat.module.css';
 import { useMessagesAPI } from "@/hooks";
 import { MessageBox } from "./MessageBox";
 import { Message, useGetMessages } from "@/lib/kubb";
-import { EncryptedMessage, getNormalKeysChatIdSuspense, useGetClientChatId, useGetMessagesChatId, useGetNormalKeysChatId, useGetNormalKeysChatIdSuspense } from "@/lib/kubb-he";
+import { DecryptMessageBody, EncryptedMessage, getNormalKeysChatIdSuspense, useGetClientChatId, useGetNormalKeysChatId, useGetNormalKeysChatIdSuspense } from "@/lib/kubb-he";
 import path from "path";
 import fs from 'fs';
 
@@ -19,7 +19,6 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
   const [text, setText] = useState('');
   const [image, setImage] = useState('');
   const [offset, setOffset] = useState(0);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [total, setTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [encrypted, setEncrypted] = useState(false);
@@ -43,7 +42,7 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
     }
   }, [chatID]);
 
-  const { sendMessage, sendEncryptedMessage, setupWebSocketConnection, sendTypingEvent, socketStatus, socketRef, isTypingMessage } = useMessagesAPI({
+  const {messages, setMessages, sendMessage, decryptData, sendEncryptedMessage, setupWebSocketConnection, sendTypingEvent, socketStatus, socketRef, isTypingMessage } = useMessagesAPI({
     sender: sender!,
     targetUser: reciever.id!,
     chatID,
@@ -79,40 +78,59 @@ const Conversation: React.FC<ConversationProps> = ({ reciever, sender, chatID })
   const fetchMessages = async () => {
     setLoading(true);
     try {
+      // Call the API with offset (pagination)
       const api = getMessagesQuery;
       const { data } = await api.refetch({});
-      const newMessages = data?.array!.reverse() || [];
 
+      // Messages returned by the API, in descending order (latest first)
+      const newMessages = data?.array || [];
+
+      // Decrypt all new messages before updating state
+      const decryptedMessages = await Promise.all(
+        newMessages
+          .filter(m => m.id) // skip messages without an ID
+          .map(async (m) => {
+            const encryptedMessage: DecryptMessageBody = {
+              id: m.id!,
+              chat_id: m.chat_id!,
+              sender_id: m.sender_id!,
+              sender_name: m.sender_name!,
+              receiver_id: m.receiver_id!,
+              content: m.content!,
+              iv: m.iv!,
+              image: m.image,
+              image_to_classify: (m as any).image_to_classify!,
+              type: m.type!,
+              is_typing: m.is_typing!,
+              timestamp: m.timestamp!,
+              classification_result: m.classification_result!,
+            };
+
+            const decrypted = await decryptData(encryptedMessage);
+
+            return {
+              ...m,
+              image: decrypted?.image,
+              content: decrypted?.content,
+              classification_result: decrypted?.classification_result,
+            };
+          })
+      );
+
+      // Append decrypted messages to existing state and sort by timestamp
       setMessages(prev => {
-          // Map existing messages by ID for easy lookup
-        const messageMap = new Map<number | string, Message>();
-          prev.forEach(m => {
-            if (m.id !== undefined) messageMap.set(m.id!, m);
-          });
+        const existingIds = new Set(prev.map(m => m.id));
+        const filtered = decryptedMessages.filter(m => !existingIds.has(m.id));
+        const combined = [...prev, ...filtered];
 
-          newMessages.forEach(m => {
-            if (!m.id) return; // skip messages without ID
-            const existing = messageMap.get(m.id);
-
-            if (!existing) {
-              // New message — add it
-              messageMap.set(m?.id, m!);
-            } else if (existing.classification_result !== m.classification_result) {
-              // Same ID, classification changed — replace
-              messageMap.set(m.id, m);
-            }
-            // else same ID, same classification — keep old
-          });
-
-          // Convert map back to array and sort by timestamp
-          return Array.from(messageMap.values()).sort((a, b) => {
-            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-            return timeA - timeB;
-          });
+        // Sort ascending by timestamp
+        return combined.sort((a, b) => {
+          const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+          const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+          return timeA - timeB;
+        });
       });
 
-      console.log(messages)
       setShouldScrollToBottom(false);
       setTotal(data?.meta?.total ?? 0);
     } catch (err) {

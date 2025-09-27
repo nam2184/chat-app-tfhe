@@ -12,16 +12,6 @@ export {
   getClientChatIdErrorSchema,
   getClientChatIdQueryResponseSchema,
 } from "./getClientChatIdSchema";
-export { getMessages200Schema } from "./getMessages200Schema";
-export {
-  getMessagesChatIdPathParamsSchema,
-  getMessagesChatIdQueryParamsSchema,
-  getMessagesChatId200Schema,
-  getMessagesChatId400Schema,
-  getMessagesChatId422Schema,
-  getMessagesChatIdErrorSchema,
-  getMessagesChatIdQueryResponseSchema,
-} from "./getMessagesChatIdSchema";
 export {
   getNormalKeysChatIdPathParamsSchema,
   getNormalKeysChatId200Schema,
@@ -29,7 +19,6 @@ export {
   getNormalKeysChatIdErrorSchema,
   getNormalKeysChatIdQueryResponseSchema,
 } from "./getNormalKeysChatIdSchema";
-export { metaSchema } from "./metaSchema";
 export { paginationMetadataSchema } from "./paginationMetadataSchema";
 export {
   postDecrypt200Schema,
@@ -47,12 +36,4 @@ export {
   postEncryptMutationRequestSchema,
   postEncryptMutationResponseSchema,
 } from "./postEncryptSchema";
-export {
-  postMessage200Schema,
-  postMessage400Schema,
-  postMessage422Schema,
-  postMessageErrorSchema,
-  postMessageMutationRequestSchema,
-  postMessageMutationResponseSchema,
-} from "./postMessageSchema";
 export { UNPROCESSABLEENTITYSchema } from "./UNPROCESSABLEENTITYSchema";

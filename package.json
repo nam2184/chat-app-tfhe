@@ -49,6 +49,7 @@
     "dayjs": "^1.11.13",
     "electron": "^37.2.6",
     "emoji-picker-react": "^4.13.2",
+    "framer-motion": "^12.23.16",
     "i": "^0.3.7",
     "i18n-iso-countries": "^7.13.0",
     "immer": "^10.1.1",

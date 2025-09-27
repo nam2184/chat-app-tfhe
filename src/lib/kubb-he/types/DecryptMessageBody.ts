@@ -7,6 +7,10 @@ export type DecryptMessageBody = {
   /**
    * @type integer
    */
+  id: number;
+  /**
+   * @type integer
+   */
   chat_id: number;
   /**
    * @type integer
@@ -49,7 +53,7 @@ export type DecryptMessageBody = {
    */
   timestamp: string;
   /**
-   * @type string
+   * @type string | undefined
    */
-  classification_result: string;
+  classification_result?: string;
 };

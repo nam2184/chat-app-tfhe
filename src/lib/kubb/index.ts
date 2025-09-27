@@ -77,6 +77,7 @@ export type {
   GetUsersQueryResponse,
   GetUsersQuery,
 } from "./types/GetUsers";
+export type { InferenceEvent } from "./types/InferenceEvent";
 export type { Message } from "./types/Message";
 export type {
   PostAuth,
@@ -276,6 +277,7 @@ export {
   getUsersErrorSchema,
   getUsersQueryResponseSchema,
 } from "./zod/getUsersSchema";
+export { inferenceEventSchema } from "./zod/inferenceEventSchema";
 export { messageSchema } from "./zod/messageSchema";
 export { postAuthResponseSchema } from "./zod/postAuthResponseSchema";
 export {

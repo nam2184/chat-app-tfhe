@@ -1,6 +1,7 @@
 {
   "type": "object",
   "properties": {
+    "id": { "type": "integer" },
     "chat_id": { "type": "integer" },
     "sender_id": { "type": "integer" },
     "sender_name": { "type": "string" },
@@ -16,13 +17,14 @@
   },
   "required": [
     "chat_id",
-    "classification_result",
     "content",
+    "id",
     "receiver_id",
     "sender_id",
     "sender_name",
     "timestamp",
     "type"
   ],
+  "additionalProperties": false,
   "x-readme-ref-name": "DecryptMessageBody"
 }

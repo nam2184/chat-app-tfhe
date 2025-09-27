@@ -59,6 +59,7 @@ export type {
   GetUsersQueryResponse,
   GetUsersQuery,
 } from "./GetUsers";
+export type { InferenceEvent } from "./InferenceEvent";
 export type { Message } from "./Message";
 export type {
   PostAuth,

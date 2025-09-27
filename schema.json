@@ -99,15 +99,15 @@
       },
       "GetEvaluationKey": {
         "properties": {
+          "chat_id": {
+            "format": "int32",
+            "type": "integer"
+          },
           "file": {
             "type": "string"
           },
           "id": {
             "type": "string"
-          },
-          "user_id": {
-            "format": "int32",
-            "type": "integer"
           }
         },
         "type": "object"
@@ -270,6 +270,59 @@
               }
             },
             "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "InferenceEvent": {
+        "properties": {
+          "chat_id": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "classification_result": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "finished": {
+            "type": "boolean"
+          },
+          "id": {
+            "minimum": 0,
+            "nullable": true,
+            "type": "integer"
+          },
+          "image": {
+            "type": "string"
+          },
+          "image_to_classify": {
+            "type": "string"
+          },
+          "is_typing": {
+            "type": "boolean"
+          },
+          "iv": {
+            "type": "string"
+          },
+          "receiver_id": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sender_id": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sender_name": {
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -442,15 +495,15 @@
       },
       "PostEvaluationKey": {
         "properties": {
+          "chat_id": {
+            "format": "int32",
+            "type": "integer"
+          },
           "file": {
             "type": "string"
           },
           "id": {
             "type": "string"
-          },
-          "user_id": {
-            "format": "int32",
-            "type": "integer"
           }
         },
         "type": "object"

@@ -6,6 +6,7 @@
 import { z } from "zod";
 
 export const decryptedMessageSchema = z.object({
+  id: z.number().int(),
   chat_id: z.number().int(),
   sender_id: z.number().int(),
   sender_name: z.string(),
@@ -16,5 +17,5 @@ export const decryptedMessageSchema = z.object({
   type: z.string(),
   is_typing: z.boolean().optional(),
   timestamp: z.string().datetime(),
-  classification_result: z.boolean(),
+  classification_result: z.string(),
 });

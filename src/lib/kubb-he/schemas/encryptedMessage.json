@@ -23,5 +23,6 @@
     "timestamp",
     "type"
   ],
+  "additionalProperties": false,
   "x-readme-ref-name": "EncryptedMessage"
 }

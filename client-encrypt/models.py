@@ -34,6 +34,7 @@ class EncryptedMessageSchema(ma.Schema):
 
 
 class DecryptedMessageSchema(ma.Schema):
+    id = ma.fields.Int(required=True)
     chat_id = ma.fields.Int(required=True)
     sender_id = ma.fields.Int(required=True)
     sender_name = ma.fields.Str(required=True)
@@ -44,7 +45,7 @@ class DecryptedMessageSchema(ma.Schema):
     type = ma.fields.Str(required=True)
     is_typing = ma.fields.Bool(required=False)
     timestamp = ma.fields.DateTime(required=True)
-    classification_result = ma.fields.Bool(required=True)
+    classification_result = ma.fields.Str(required=True)
 
 class EncryptMessageBodySchema(ma.Schema):
     chat_id = ma.fields.Int(required=True)
@@ -59,6 +60,7 @@ class EncryptMessageBodySchema(ma.Schema):
     classification_result = ma.fields.Str(required=False)
 
 class DecryptMessageBodySchema(ma.Schema):
+    id = ma.fields.Int(required=True)
     chat_id = ma.fields.Int(required=True)
     sender_id = ma.fields.Int(required=True)
     sender_name = ma.fields.Str(required=True)
@@ -87,3 +89,4 @@ class MetaSchema(ma.Schema):
 class GetMessages200Schema(ma.Schema):
     array = ma.fields.List(ma.fields.Nested(EncryptedMessageSchema), required=True)
     meta = ma.fields.Nested(MetaSchema, required=True)
+

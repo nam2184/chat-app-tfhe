@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { User, api } from "@/utils";
 import {  Message } from "@/lib/kubb"
-import { EncryptedMessage, postDecrypt, usePostDecrypt, usePostEncrypt, usePostMessage } from "@/lib/kubb-he";
+import { DecryptMessageBody, EncryptedMessage, usePostDecrypt, usePostEncrypt } from "@/lib/kubb-he";
 
 interface MessageProps {
   sender?: User| undefined;
@@ -35,53 +35,57 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     };
 
     socket.onmessage = (event) => {
-      const newMessage: Message = JSON.parse(event.data);
-      
+      const incoming: Message = JSON.parse(event.data);
+
       (async () => {
-        if (newMessage?.type === "typing") {
-          // Update typing status based on incoming event
-          setIsTyping(newMessage.is_typing);
-        } else {
-          const encryptedMessage: EncryptedMessage = {
-              chat_id: newMessage.chat_id!,
-              sender_id: newMessage.sender_id!,
-              sender_name: newMessage.sender_name!,
-              receiver_id: newMessage.receiver_id!,
-              content: newMessage.content!,
-              iv: (newMessage as any).iv!, // optional if present
-              image: newMessage.image,
-              image_to_classify: (newMessage as any).image_to_classify!,
-              type: newMessage.type!,
-              is_typing: newMessage.is_typing!,
-              timestamp: newMessage.timestamp!,
-              classification_result: newMessage.classification_result!,
-            };
-          
-          // Avoid duplicate messages by checking if the new message already exists
-          const decryptedMessage = await decryptData(encryptedMessage);
-          newMessage.image = decryptedMessage?.image
-          newMessage.content = decryptedMessage?.content
-          newMessage.classification_result = decryptedMessage?.classification_result
-
-          setMessages(prev => {
-            // Copy the previous array to avoid mutating state
-            const updated = prev.map(msg => {
-              if (msg.id === newMessage.id) {
-                // Same ID but different classification_result → replace
-                if (msg.classification_result == "" && msg.classification_result !== newMessage.classification_result) {
-                  return newMessage;
-                }
-                // Same ID and same classification → keep old
-                return msg;
-              }
-              return msg; // keep other messages
-            });
-
-            // If the message ID didn’t exist, append it
-            const exists = prev.some(msg => msg.id === newMessage.id);
-            return exists ? updated : [...prev, newMessage];
-          });          
+        if (incoming?.type === "typing") {
+          // Update typing status
+          setIsTyping(incoming.is_typing);
+          return;
         }
+
+        // Decrypt the message
+        const encryptedMessage: DecryptMessageBody = {
+          id: incoming.id!,
+          chat_id: incoming.chat_id!,
+          sender_id: incoming.sender_id!,
+          sender_name: incoming.sender_name!,
+          receiver_id: incoming.receiver_id!,
+          content: incoming.content!,
+          iv: incoming.iv!,
+          image: incoming.image,
+          image_to_classify: (incoming as any).image_to_classify!,
+          type: incoming.type!,
+          is_typing: incoming.is_typing!,
+          timestamp: incoming.timestamp!,
+          classification_result: incoming.classification_result!,
+        };
+
+        const decrypted = await decryptData(encryptedMessage);
+
+        const newMessage: Message = {
+          ...incoming,
+          image: decrypted?.image,
+          content: decrypted?.content,
+          classification_result: decrypted?.classification_result,
+        };
+
+        // Update state safely
+         setMessages(prev => {
+          const exists = prev.some(msg => msg.id === newMessage.id);
+          console.log("attempting to append")
+          if (exists) {
+            // Replace the message fully (merge) to force re-render
+            return prev.map(msg =>
+              msg.id === newMessage.id ? { ...msg, ...newMessage } : msg
+            );
+          } else {
+            // Append new message
+            console.log("Appended message")
+            console.log(newMessage)
+            return [...prev, newMessage];
+          }
+        });
       })();
     };
 
@@ -161,7 +165,7 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
     }
   };
   
-  const encryptData = async (data : Message) => {
+  const encryptData = async (data : EncryptedMessage) => {
         try {
           const response = await postEncryptMutation.mutateAsync({ 
             data : {
@@ -185,15 +189,17 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
         }
     };
 
-    const decryptData = (data : EncryptedMessage) => {
+    const decryptData = (data : DecryptMessageBody) => {
         try {
             const response = postDecryptMutation.mutateAsync({ 
               data : {
+                id: data.id,
                 content: data.content!,
                 image: data.image,
                 image_to_classify: data.image_to_classify,
                 chat_id: data.chat_id!, 
                 sender_id: data.sender_id!,
+                iv: data.iv!,
                 type : data.type!,
                 sender_name: data.sender_name!,
                 receiver_id: data.receiver_id!,
@@ -212,7 +218,9 @@ const useMessagesAPI = ({ targetUser, chatID, offset, sender }: MessageProps) =>
 
   return {
     messages,
+    setMessages,
     sendMessage,
+    decryptData,
     sendEncryptedMessage,
     sendTypingEvent,
     socketStatus,
