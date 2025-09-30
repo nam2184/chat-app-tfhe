@@ -532,7 +532,7 @@ def save_openapi_spec(app, output_path="he-schema.json"):
 
 # --- Run Flask App ---
 def run_flask_app(app, port):
-    app.run(host='127.0.0.1', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=True)
 
 # --- Main ---
 if __name__ == '__main__':
