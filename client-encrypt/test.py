@@ -6,10 +6,11 @@ import os
 import random
 import requests
 import websockets
-
 from preprocess import process_images_color
 from serialiser import Network
+from dotenv import load_dotenv
 
+load_dotenv()
 network = Network()
 
 # ==========================================================
@@ -53,23 +54,28 @@ async def keep_alive(ws, interval=30):
 def make_small_dataset(base_path, n_samples=100, seed=42):
     random.seed(seed)
     x_train, y_train = [], []
-    for class_name in os.listdir(base_path):
+    
+    classes = [c for c in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, c))]
+    num_classes = len(classes)
+    samples_per_class = n_samples // num_classes
+
+    for class_name in classes:
         class_path = os.path.join(base_path, class_name)
-        if not os.path.isdir(class_path):
-            continue
         label = 0 if class_name.lower() in ["neutral", "drawings"] else 1
         images = [
             os.path.join(class_path, f)
             for f in os.listdir(class_path)
             if f.lower().endswith((".jpg", ".png"))
         ]
-        for img in random.sample(images, min(len(images), n_samples // 2)):
+        for img in random.sample(images, min(len(images), samples_per_class)):
             x_train.append(img)
             y_train.append(label)
+
     return x_train, y_train
 
 def split_and_preprocess_calibration(base_path, n_samples=100, seed=42):
     calibration_data, classification = make_small_dataset(base_path, n_samples=n_samples, seed=seed)
+    print(len(calibration_data))
     calibration_data_preprocessed = process_images_color(calibration_data)
     return calibration_data, calibration_data_preprocessed, classification
 
@@ -156,7 +162,7 @@ async def send_calibration_over_ws(base_path, access_token, sender_id, sender_na
 
 if __name__ == "__main__":
     dataset_root = os.path.dirname(os.getcwd())
-    access_token = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im5hbTIxODQiLCJ0cGUiOiJBY2Nlc3MgVG9rZW4iLCJpc3MiOiJhdXRoLXNlcnZpY2UiLCJzdWIiOiIxIiwiZXhwIjoxNzYxMTkxNTE4LCJpYXQiOjE3NjExMDUxMTh9.x7el6q_M8rB5Pu5Iy_n8_WSIhlKA6vdxn3CQIxIhqz6-fwdIkqqONRInL_2U_VKTHoPYhH3H79XYFIp7J18wZw"
+    access_token = os.getenv("TEST_TOKEN")
     asyncio.run(send_calibration_over_ws(
         f"{dataset_root}/dataset",
         access_token,
