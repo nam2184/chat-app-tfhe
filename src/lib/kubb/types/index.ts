@@ -91,8 +91,8 @@ export type {
 } from "./PostChats";
 export type { PostChatsResponse } from "./PostChatsResponse";
 export type {
-  PostEvaluationKey,
   PostEvaluationKey200,
+  PostEvaluationKey202,
   PostEvaluationKey400,
   PostEvaluationKeyError,
   PostEvaluationKeyMutationRequest,
@@ -100,4 +100,5 @@ export type {
   PostEvaluationKeyMutation,
 } from "./PostEvaluationKey";
 export type { PostEvaluationKeyBody } from "./PostEvaluationKeyBody";
+export type { PostEvaluationKeyPartial } from "./PostEvaluationKeyPartial";
 export type { PostSignUpResponse } from "./PostSignUpResponse";

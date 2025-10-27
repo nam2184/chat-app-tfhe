@@ -10,7 +10,16 @@ export type PostEvaluationKeyBody = {
    */
   chat_id?: number;
   /**
+   * @minLength 0
+   * @type integer | undefined
+   */
+  chunk?: number;
+  /**
    * @type string | undefined
    */
   file?: string;
+  /**
+   * @type integer | undefined
+   */
+  total_chunks?: number;
 };

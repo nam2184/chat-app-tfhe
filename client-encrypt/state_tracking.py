@@ -4,6 +4,15 @@ import os
 import uuid
 import base64
 
+def fix_base64_padding(b64_string: str) -> str:
+    if b64_string.startswith("data:image"):
+        b64_string = b64_string.split(",", 1)[-1]
+    missing_padding = len(b64_string) % 4
+    if missing_padding:
+        b64_string += '=' * (4 - missing_padding)
+    return b64_string
+
+
 class Statistics:
     """
     Stateless-ish single-request tracker for Flask endpoints.
@@ -39,7 +48,7 @@ class Statistics:
         payload_bytes = b""
         if message.get("image"):
             self.plaintext = message.get("image")
-            payload_bytes += base64.b64decode(message["image"])
+            payload_bytes += base64.b64decode(fix_base64_padding(message["image"]))
         if message.get("content"):
             payload_bytes += message["content"].encode()
         # capture memory usage at start

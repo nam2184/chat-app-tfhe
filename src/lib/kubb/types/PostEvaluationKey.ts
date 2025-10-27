@@ -5,26 +5,17 @@
 
 import type { ErrorResponse } from "./ErrorResponse";
 import type { PostEvaluationKeyBody } from "./PostEvaluationKeyBody";
-
-export type PostEvaluationKey = {
-  /**
-   * @type integer | undefined, int32
-   */
-  chat_id?: number;
-  /**
-   * @type string | undefined
-   */
-  file?: string;
-  /**
-   * @type string | undefined
-   */
-  id?: string;
-};
+import type { PostEvaluationKeyPartial } from "./PostEvaluationKeyPartial";
 
 /**
  * @description Send eval key success
  */
-export type PostEvaluationKey200 = PostEvaluationKey;
+export type PostEvaluationKey200 = any;
+
+/**
+ * @description Accepted
+ */
+export type PostEvaluationKey202 = PostEvaluationKeyPartial;
 
 /**
  * @description Failure
@@ -38,10 +29,12 @@ export type PostEvaluationKeyError = any;
  */
 export type PostEvaluationKeyMutationRequest = PostEvaluationKeyBody;
 
-export type PostEvaluationKeyMutationResponse = PostEvaluationKey200;
+export type PostEvaluationKeyMutationResponse =
+  | PostEvaluationKey200
+  | PostEvaluationKey202;
 
 export type PostEvaluationKeyMutation = {
-  Response: PostEvaluationKey200;
+  Response: PostEvaluationKey200 | PostEvaluationKey202;
   Request: PostEvaluationKeyMutationRequest;
   Errors: PostEvaluationKey400;
 };

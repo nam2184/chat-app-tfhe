@@ -1,0 +1,10 @@
+{
+  "properties": {
+    "chat_id": { "minimum": 0, "type": "integer" },
+    "chunk": { "minimum": 0, "type": "integer" },
+    "file": { "type": "string" },
+    "total_chunks": { "type": "integer" }
+  },
+  "type": "object",
+  "x-readme-ref-name": "PostEvaluationKeyPartial"
+}

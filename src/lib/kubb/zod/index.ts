@@ -81,9 +81,10 @@ export {
   postChatsMutationResponseSchema,
 } from "./postChatsSchema";
 export { postEvaluationKeyBodySchema } from "./postEvaluationKeyBodySchema";
+export { postEvaluationKeyPartialSchema } from "./postEvaluationKeyPartialSchema";
 export {
-  postEvaluationKeySchema,
   postEvaluationKey200Schema,
+  postEvaluationKey202Schema,
   postEvaluationKey400Schema,
   postEvaluationKeyErrorSchema,
   postEvaluationKeyMutationRequestSchema,

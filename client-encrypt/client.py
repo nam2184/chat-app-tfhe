@@ -5,6 +5,7 @@ from flask_smorest.blueprint import MethodView
 from flask_smorest.response import Response
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
+from numpy.lib import math
 from werkzeug.datastructures import FileStorage
 from dotenv import load_dotenv
 import torch
@@ -35,6 +36,7 @@ from multiprocessing import Process
 import zipfile
 from state_tracking import Statistics
 from threading import Lock
+from resnet import ResNet18, load_resnet_cnn
 
 network = Network()
 
@@ -50,6 +52,8 @@ api = Api(app)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 blp = Blueprint("client", "client", url_prefix="/", description="Client Endpoints")
+resnet_model, specs = load_resnet_cnn(os.getcwd() + "/client-encrypt", quant_bits=4)
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 def encode_json_safe(obj):
     if isinstance(obj, dict):
@@ -88,24 +92,73 @@ def get_extracted_folder_id(zip_path: str, target_dir: str):
             if os.path.exists(extracted_folder):
                 return extracted_folder 
 
-def post_evaluation_keys(model_client: FHEModelClient, chat_id: int, url: str, access_token: str = None):
-    """Serialize, encode and send evaluation keys to the given server endpoint."""
-    serialized_evaluation_keys = model_client.get_serialized_evaluation_keys()
-    encoded_eval_keys = base64.b64encode(serialized_evaluation_keys).decode("utf-8")
-    print("Got serialized_evaluation_keys")
-    body = {"chat_id": chat_id, "file": encoded_eval_keys}
+def get_evaluation_keys(url: str, access_token: str = None):
 
-    headers = { "Origin" : network.local_encrypt_endpoint}
+    headers = { "Origin": network.local_encrypt_endpoint }
     if access_token:
         headers["Authorization"] = f"{access_token}"
+    
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            print(f"[INFO] Key exists already")
+            return True
+        else:
+            print(f"[ERROR]{response.status_code} Key doesnt exist")
+            return False
+    except Exception as e:
+        print(f"[EXCEPTION] {e}")
+ 
+def post_evaluation_keys(model_client, chat_id: int, url: str, access_token: str = None):
 
-    response = requests.post(url, json=body, headers=headers if headers else None)
-
-    if response.status_code == 200:
-        print("Posted public evaluation key to server.")
-    else:
-        print("Upload failed:", response.status_code, response.json())
-
+    """
+    Serialize, encode and send evaluation keys to the server in 25 MB chunks.
+    """
+    # 1. Serialize and Base64-encode
+    serialized_eval_keys = model_client.get_serialized_evaluation_keys()
+    encoded_eval_keys = base64.b64encode(serialized_eval_keys).decode("utf-8")
+    print(encoded_eval_keys) 
+    size_bytes = len(encoded_eval_keys.encode("utf-8"))
+    print(f"[DEBUG] Total size: {size_bytes} bytes")
+    
+    # 2. Split into 25 MB chunks
+    CHUNK_SIZE_MB = 80
+    CHUNK_SIZE_BYTES = CHUNK_SIZE_MB * 1024 * 1024
+    total_chunks = math.ceil(size_bytes / CHUNK_SIZE_BYTES)
+    
+    headers = { "Origin": network.local_encrypt_endpoint }
+    if access_token:
+        headers["Authorization"] = f"{access_token}"
+    
+    # 3. Send each chunk
+    for i in range(total_chunks):
+        start = i * CHUNK_SIZE_BYTES
+        end = min((i + 1) * CHUNK_SIZE_BYTES, size_bytes)
+        chunk_data = encoded_eval_keys[start:end]
+        print("start : ", start)
+        print("end : ", end)
+        
+        payload = {
+            "chat_id": chat_id,
+            "file": chunk_data,
+            "chunk": i,
+            "total_chunks": total_chunks
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            if response.status_code == 200 and i == total_chunks:
+                print(f"[INFO] Chunk {i+1}/{total_chunks} posted successfully.")
+            elif response.status_code == 200 and i != total_chunks:
+                print(f"[INFO] Evaluation key for chat id already exists")
+                break
+            elif response.status_code == 202:
+                print(f"[INFO] Chunk {i+1}/{total_chunks} accepted (pending).")
+            else:
+                print(f"[ERROR] Chunk {i+1}/{total_chunks} failed:", response.status_code, response.text)
+        except Exception as e:
+            print(f"[EXCEPTION] Chunk {i+1}/{total_chunks}:", e)
+            
 # --- Client config downloaders ---
 def generate_client_configs_local(network: Network, chat_id: int): 
     client_dir_path = network.client_dir.name
@@ -119,9 +172,11 @@ def generate_client_configs_local(network: Network, chat_id: int):
         print("Loading keys")
         model_client.client.keys.load(client_keys_zip_path)
         print("Loaded keys")
-        eval_key_url = f"{network.local_inference_endpoint}/key"
-        
-        post_evaluation_keys(model_client, chat_id, eval_key_url)
+        get_eval_key_url = f"{network.local_inference_endpoint}/key/{chat_id}"
+        if get_evaluation_keys(get_eval_key_url) == False:
+            post_eval_key_url = f"{network.local_inference_endpoint}/key"
+            post_evaluation_keys(model_client, chat_id, post_eval_key_url)
+       
         cleanup_extracted_folder(client_keys_zip_path, client_dir_path)
         return
 
@@ -153,11 +208,38 @@ def generate_client_configs_local(network: Network, chat_id: int):
     model_client = FHEModelClient(client_dir_path)
     model_client.client.keys.load(client_keys_zip_path)
     
-    eval_key_url = f"{network.local_inference_endpoint}/key"
-    post_evaluation_keys(model_client, chat_id, eval_key_url)
+    get_eval_key_url = f"{network.local_inference_endpoint}/key/{chat_id}"
+    if get_evaluation_keys(get_eval_key_url) == False:
+        post_eval_key_url = f"{network.local_inference_endpoint}/key"
+        post_evaluation_keys(model_client, chat_id, post_eval_key_url)
     # Cleanup
     cleanup_extracted_folder(client_keys_zip_path, client_dir_path)
 
+def post_evaluation_keys_full(model_client, chat_id: int, url: str, access_token: str = None):
+
+    # 1. Serialize and Base64-encode
+    serialized_eval_keys = model_client.get_serialized_evaluation_keys()
+    encoded_eval_keys = base64.b64encode(serialized_eval_keys).decode("utf-8")
+    
+    headers = { "Origin": network.local_encrypt_endpoint }
+    if access_token:
+        headers["Authorization"] = f"{access_token}"
+    
+    payload = {
+        "chat_id": chat_id,
+        "file": encoded_eval_keys,
+        "chunk": 1,
+        "total_chunks": 1, 
+    }
+        
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == 200 :
+            print(f"[INFO] Upload done")
+    except Exception as e:
+        print(f"[EXCEPTION] Post evaluation key fail :", e)
+            
+# --- Client config downloaders ---
 def generate_client_configs(network: Network, chat_id: int, access_token: str): 
     client_dir_path = network.client_dir.name
     client_keys_zip_path = os.path.join(client_dir_path, f"keys{chat_id}.bin")
@@ -168,8 +250,10 @@ def generate_client_configs(network: Network, chat_id: int, access_token: str):
         model_client = FHEModelClient(client_dir_path)
         print("Created FHE client.")
         model_client.client.keys.load(client_keys_zip_path)
-        eval_key_url = f"{network.backend}/evaluation-key"
-        post_evaluation_keys(model_client, chat_id, eval_key_url, access_token)
+        get_eval_key_url = f"{network.backend}/evaluation-key/{chat_id}"
+        if get_evaluation_keys(get_eval_key_url, access_token) == False:
+            post_eval_key_url = f"{network.backend}/evaluation-key"
+            post_evaluation_keys(model_client, chat_id, post_eval_key_url, access_token)
         return
 
     # --- Fetch FHE client configs ---
@@ -200,8 +284,10 @@ def generate_client_configs(network: Network, chat_id: int, access_token: str):
     model_client = FHEModelClient(client_dir_path)
     model_client.client.keys.load(client_keys_zip_path)
     
-    eval_key_url = f"{network.backend}/evaluation-key"
-    post_evaluation_keys(model_client, chat_id, eval_key_url, access_token)
+    get_eval_key_url = f"{network.backend}/evaluation-key/{chat_id}"
+    if get_evaluation_keys(get_eval_key_url) == False:
+        post_eval_key_url = f"{network.backend}/evaluation-key"
+        post_evaluation_keys(model_client, chat_id, post_eval_key_url, access_token)
 
 def generate_normal_keys_local(chat_id, network: Network):
     # --- Paths ---
@@ -351,73 +437,81 @@ class Encrypt(MethodView):
     def post(self, data):
         try:
             message = data
+            print("[INFO] Resetting stats logger")
             stats_logger.reset()
             stats_logger.start_request(message)
-            if not message.get("content") and not message.get("image"):
-                raise ValueError("Either 'content' or 'image' must be provided.")
-            normal_keys_dir = os.path.join(network.client_dir.name)
 
-            # load AES key (example: saved as aes_key.bin)
             chat_id = message.get("chat_id")
+            image_b64 = message.get("image", "")
+            content = message.get("content", "")
+
+            if not content and not image_b64:
+                raise ValueError("Either 'content' or 'image' must be provided.")
+
+            normal_keys_dir = network.client_dir.name
             aes_key_path = os.path.join(normal_keys_dir, f"aes_key{chat_id}.bin")
-            
             if not os.path.exists(aes_key_path):
-                print("No aes key found")
+                print("[ERROR] AES key not found")
                 raise FileNotFoundError("AES key not found in normal_keys directory.")
+
             with open(aes_key_path, "rb") as f:
                 aes_key = f.read()
-            
-            client_dir_path = network.client_dir.name
-            client_keys_zip_path = os.path.join(
-                client_dir_path, f"keys{message.get('chat_id')}.bin"
-            )
-            print(f"[DEBUG] Using client_dir_path={client_dir_path}")
-            print(f"[DEBUG] Looking for keys zip at {client_keys_zip_path}")
-
-            print("starting encryption")
             cipher_aes = AES.new(aes_key, AES.MODE_CBC)
-            if message.get("image") != "":
-                client_dir_path = network.client_dir.name
+            print("[INFO] AES key loaded and cipher initialized")
 
-                image_data = base64.b64decode(fix_base64_padding(message["image"]))
+            # --- Image encryption ---
+            if image_b64:
+                print("[INFO] Encrypting image normally")
+                image_data = base64.b64decode(fix_base64_padding(image_b64))
                 ct_bytes_image = cipher_aes.encrypt(pad(image_data, AES.block_size))
                 message["image"] = base64.b64encode(ct_bytes_image).decode("utf-8")
-                print("encrypted image normally")
+                print("[INFO] Image encrypted")
+            
+                print("[INFO] Preprocessing image for FHE")
                 image = Image.open(BytesIO(image_data))
+                preprocessed_image = preprocess_image(image, size=64)
+                print("[INFO] Performing feature extraction through resnet18")
+                with torch.no_grad():  # inference mode, no grad needed
+                    input_tensor = resnet_model(torch.from_numpy(preprocessed_image).to(device))    
 
-                print("Preprocessing image")
-                preprocessed_image = preprocess_image(image)
-
+                features_min = input_tensor.min()
+                features_max = input_tensor.max()
+                input_tensor = (input_tensor - features_min) / (features_max - features_min + 1e-8)
+                input = input_tensor.detach().cpu().numpy()
+                print(input)
+                print("[INFO] Loading FHE client keys")
+                client_dir_path = network.client_dir.name
+                client_keys_zip_path = os.path.join(client_dir_path, f"keys{chat_id}.bin")
                 model_client = FHEModelClient(client_dir_path)
                 model_client.client.keys.load(client_keys_zip_path)
-                print("Encrypting image")
-                encrypted_input = model_client.quantize_encrypt_serialize(preprocessed_image)
 
-                print("Finished encrypting")
-
-                #serialized_data = pickle.dumps(encrypted_input)
+                print("[INFO] Encrypting image with FHE model")
+                encrypted_input = model_client.quantize_encrypt_serialize(input)
                 encoded_serialized_data = base64.b64encode(encrypted_input).decode("utf-8")
                 message["image_to_classify"] = encoded_serialized_data
-                stats_logger.visual_ciphertext(util.visual_encrypted_data_base64(encrypted_input.hex()))
 
+                stats_logger.visual_ciphertext(
+                    util.visual_encrypted_data_base64(encrypted_input.hex())
+                )
                 message["iv"] = base64.b64encode(cipher_aes.iv).decode("utf-8")
-                
-                #send_inference_local(message, network)
+                print("[INFO] Finished FHE encryption for image")
             else:
-                print("no image")
+                print("[INFO] No image to encrypt")
 
-            if message.get("content") != "":
-                message["iv"] = base64.b64encode(cipher_aes.iv).decode("utf-8")
-                print("encrypting content :" + message["content"])
-                ct_bytes_content = cipher_aes.encrypt(pad(message["content"].encode(), AES.block_size))
-                print("encrypted content")
+            # --- Content encryption ---
+            if content:
+                print(f"[INFO] Encrypting content: {content}")
+                ct_bytes_content = cipher_aes.encrypt(pad(content.encode(), AES.block_size))
                 message["content"] = base64.b64encode(ct_bytes_content).decode("utf-8")
-                print("encoded content")
+                message["iv"] = base64.b64encode(cipher_aes.iv).decode("utf-8")
+                print("[INFO] Content encrypted")
 
             stats_logger.end_request(message)
+            print("[INFO] Encryption endpoint completed successfully")
             return message
 
         except Exception as e:
+            print(f"[ERROR] Exception in /encrypt endpoint: {e}")
             error = {"section": "messages", "message": str(e)}
             return error, 400
 
@@ -436,7 +530,6 @@ class Decrypt(MethodView):
 
             # --- FHE Decryption ---
             class_result_encoded = message.get("classification_result")
-            print("[DEBUG] classification_result (encoded) exists?", class_result_encoded)
 
             if class_result_encoded and class_result_encoded != "No image" and class_result_encoded != "Pending":
                 client_dir_path = network.client_dir.name

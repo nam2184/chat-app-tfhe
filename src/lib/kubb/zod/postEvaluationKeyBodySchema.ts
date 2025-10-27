@@ -7,5 +7,7 @@ import { z } from "zod";
 
 export const postEvaluationKeyBodySchema = z.object({
   chat_id: z.number().int().min(0).optional(),
+  chunk: z.number().int().min(0).optional(),
   file: z.string().optional(),
+  total_chunks: z.number().int().optional(),
 });

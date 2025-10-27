@@ -44,7 +44,7 @@ const QueueView: React.FC = () => {
                 <div className="relative">
                   {/* Image with blur until finished */}
                   <img
-                    src={`data:image/png;base64,${msg.image}`}
+                    src={`${msg.image}`}
                     alt={`Message ${msg.id}`}
                     className={`w-full h-64 object-cover transition-all duration-500 ${
                       msg.finished ? "blur-0" : "blur-md"

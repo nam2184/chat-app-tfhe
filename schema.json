@@ -493,29 +493,40 @@
         },
         "type": "object"
       },
-      "PostEvaluationKey": {
-        "properties": {
-          "chat_id": {
-            "format": "int32",
-            "type": "integer"
-          },
-          "file": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "PostEvaluationKeyBody": {
         "properties": {
           "chat_id": {
             "minimum": 0,
             "type": "integer"
           },
+          "chunk": {
+            "minimum": 0,
+            "type": "integer"
+          },
           "file": {
             "type": "string"
+          },
+          "total_chunks": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PostEvaluationKeyPartial": {
+        "properties": {
+          "chat_id": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "chunk": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "file": {
+            "type": "string"
+          },
+          "total_chunks": {
+            "type": "integer"
           }
         },
         "type": "object"
@@ -780,14 +791,17 @@
         },
         "responses": {
           "200": {
+            "description": "Send eval key success"
+          },
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PostEvaluationKey"
+                  "$ref": "#/components/schemas/PostEvaluationKeyPartial"
                 }
               }
             },
-            "description": "Send eval key success"
+            "description": "Accepted"
           },
           "400": {
             "content": {

@@ -5,18 +5,20 @@
 
 import { errorResponseSchema } from "./errorResponseSchema";
 import { postEvaluationKeyBodySchema } from "./postEvaluationKeyBodySchema";
+import { postEvaluationKeyPartialSchema } from "./postEvaluationKeyPartialSchema";
 import { z } from "zod";
-
-export const postEvaluationKeySchema = z.object({
-  chat_id: z.number().int().optional(),
-  file: z.string().optional(),
-  id: z.string().optional(),
-});
 
 /**
  * @description Send eval key success
  */
-export const postEvaluationKey200Schema = z.lazy(() => postEvaluationKeySchema);
+export const postEvaluationKey200Schema = z.any();
+
+/**
+ * @description Accepted
+ */
+export const postEvaluationKey202Schema = z.lazy(
+  () => postEvaluationKeyPartialSchema,
+);
 
 /**
  * @description Failure
@@ -32,6 +34,7 @@ export const postEvaluationKeyMutationRequestSchema = z.lazy(
   () => postEvaluationKeyBodySchema,
 );
 
-export const postEvaluationKeyMutationResponseSchema = z.lazy(
-  () => postEvaluationKey200Schema,
-);
+export const postEvaluationKeyMutationResponseSchema = z.union([
+  z.lazy(() => postEvaluationKey200Schema),
+  z.lazy(() => postEvaluationKey202Schema),
+]);

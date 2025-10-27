@@ -109,8 +109,8 @@ export type {
 } from "./types/PostChats";
 export type { PostChatsResponse } from "./types/PostChatsResponse";
 export type {
-  PostEvaluationKey,
   PostEvaluationKey200,
+  PostEvaluationKey202,
   PostEvaluationKey400,
   PostEvaluationKeyError,
   PostEvaluationKeyMutationRequest,
@@ -118,6 +118,7 @@ export type {
   PostEvaluationKeyMutation,
 } from "./types/PostEvaluationKey";
 export type { PostEvaluationKeyBody } from "./types/PostEvaluationKeyBody";
+export type { PostEvaluationKeyPartial } from "./types/PostEvaluationKeyPartial";
 export type { PostSignUpResponse } from "./types/PostSignUpResponse";
 export {
   getChatsQueryKey,
@@ -306,9 +307,10 @@ export {
   postChatsMutationResponseSchema,
 } from "./zod/postChatsSchema";
 export { postEvaluationKeyBodySchema } from "./zod/postEvaluationKeyBodySchema";
+export { postEvaluationKeyPartialSchema } from "./zod/postEvaluationKeyPartialSchema";
 export {
-  postEvaluationKeySchema,
   postEvaluationKey200Schema,
+  postEvaluationKey202Schema,
   postEvaluationKey400Schema,
   postEvaluationKeyErrorSchema,
   postEvaluationKeyMutationRequestSchema,
