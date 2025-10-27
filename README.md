@@ -21,7 +21,7 @@ The frontend uses Kubb for automatic API client generation, ensuring type-safe c
 - **Kubb** - OpenAPI code generation
 - **Electron** - Desktop application wrapper
 
-### Backend
+### Backend Encryptions server
 - **Python 3** - Runtime
 - **Flask** - Web framework
 - **Flask-SMOREST** - REST API framework
@@ -45,25 +45,8 @@ npm install
 
 # Generate API clients from OpenAPI specs
 npm run kubb:generate
+
 ```
-
-### Backend Setup
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install flask flask-smorest marshmallow concrete-ml
-
-# Start the chat backend
-python app.py
-```
-
 ### Encrypt Server Setup
 
 ```bash
