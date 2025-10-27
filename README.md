@@ -8,7 +8,7 @@ This application consists of three main components:
 
 - **Frontend**: React + TypeScript + Vite application with Electron support
 - **Chat Backend**: Python3 Flask API with Flask-SMOREST and Marshmallow
-- **Client Encrypt Server**: Python3 ConcreteML-powered encryption service
+- **Client Encrypt Server**: Python3 ConcreteML-powered encryption service with Resnet18 Feature extraction before encryption
 
 The frontend uses Kubb for automatic API client generation, ensuring type-safe communication with both backend services.
 
